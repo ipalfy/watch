@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Braun-Style Analog Clock</title>
+  <style>
+    :root {
+      --bg-color: #f0f0f0;
+      --clock-bg: #ffffff;
+      --border-color: #000000;
+      --hand-color: #000000;
+      --second-hand-color: #ff9d00;
+      --text-color: #000000;
+      --toggle-bg: #ccc;
+      --toggle-circle: #fff;
+      --date-time-bg: #ff9d00;
+    }
+
+    body.dark-mode {
+      --bg-color: #1a1a1a;
+      --clock-bg: #333333;
+      --border-color: #cccccc;
+      --hand-color: #cccccc;
+      --second-hand-color: #ff6666;
+      --text-color: #cccccc;
+      --toggle-bg: #555;
+      --toggle-circle: #aaa;
+      --date-time-bg: #555;
+    }
+
+    body {
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: var(--bg-color);
+      overflow: hidden;
+      transition: background-color 0.3s ease;
+    }
+    .clock-container {
+      width: 80vmin;
+      height: 80vmin;
+      position: relative;
+      background-color: var(--clock-bg);
+      border-radius: 50%;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .clock-face {
+      width: 105%;
+      height: 105%;
+      position: relative;
+    }
+    .hour-hand, .minute-hand, .second-hand {
+      position: absolute;
+      bottom: 50%;
+      left: 50%;
+      transform-origin: bottom center;
+      background-color: var(--hand-color);
+    }
+    .hour-hand {
+      width: 12px;
+      height: 30%;
+      border-radius: 6px;
+    }
+    .minute-hand {
+      width: 8px;
+      height: 40%;
+      border-radius: 4px;
+    }
+    .second-hand {
+      width: 4px;
+      height: 45%;
+      background-color: var(--second-hand-color);
+      border-radius: 2px;
+    }
+    .center-dot {
+      width: 16px;
+      height: 16px;
+      background-color: var(--hand-color);
+      border-radius: 50%;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    .tick {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+    }
+    .tick div {
+      position: absolute;
+      background-color: var(--hand-color);
+      left: 50%;
+      transform-origin: 50% 50%;
+    }
+    .hour-tick div {
+      width: 6px;
+      height: 24px;
+      top: 5%;
+      margin-left: -3px;
+    }
+    .minute-tick div {
+      width: 3px;
+      height: 12px;
+      top: 5%;
+      margin-left: -1.5px;
+    }
+    .date-time {
+      position: absolute;
+      top: 71%;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      font-size: 18px;
+      color: var(--text-color);
+			background-color: var(--date-time-bg);
+			padding: 12px 20px;
+      text-align: center;
+      font-weight: 600;
+			border-radius: 8px;
+			box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      transition: color 0.3s ease, background-color 0.3s ease;
+    }
+
+    .toggle-container {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+    }
+
+    .theme-switch {
+      display: inline-block;
+      height: 34px;
+      position: relative;
+      width: 60px;
+    }
+
+    .theme-switch input {
+      display: none;
+    }
+
+    .slider {
+      background-color: var(--toggle-bg);
+      bottom: 0;
+      cursor: pointer;
+      left: 0;
+      position: absolute;
+      right: 0;
+      top: 0;
+      transition: .4s;
+    }
+
+    .slider:before {
+      background-color: var(--toggle-circle);
+      bottom: 4px;
+      content: '';
+      height: 26px;
+      left: 4px;
+      position: absolute;
+      transition: .4s;
+      width: 26px;
+    }
+
+    input:checked + .slider {
+      background-color: #2196F3;
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(26px);
+    }
+
+    .slider.round {
+      border-radius: 34px;
+    }
+
+    .slider.round:before {
+      border-radius: 50%;
+    }
+  </style>
+</head>
+<body>
+  <div class="toggle-container">
+    <label class="theme-switch" for="checkbox">
+      <input type="checkbox" id="checkbox" />
+      <div class="slider round"></div>
+    </label>
+  </div>
+  <div class="clock-container">
+    <div class="clock-face">
+      <div class="center-dot"></div>
+      <div class="hour-hand"></div>
+      <div class="minute-hand"></div>
+      <div class="second-hand"></div>
+      <div class="date-time" id="dateTime"></div>
+    </div>
+  </div>
+  <script>
+    const themeToggle = document.getElementById('checkbox');
+    themeToggle.addEventListener('change', () => {
+        document.body.classList.toggle('dark-mode', themeToggle.checked);
+    });
+
+    function createTicks() {
+      const clockFace = document.querySelector('.clock-face');
+      for (let i = 0; i < 60; i++) {
+        const tick = document.createElement('div');
+        tick.className = i % 5 === 0 ? 'tick hour-tick' : 'tick minute-tick';
+        tick.style.transform = `rotate(${i * 6}deg)`;
+        const tickInner = document.createElement('div');
+        tick.appendChild(tickInner);
+        clockFace.appendChild(tick);
+      }
+    }
+
+    function createHourNumbers() {
+        const clockFace = document.querySelector('.clock-face');
+        for (let i = 1; i <= 12; i++) {
+            const numberContainer = document.createElement('div');
+            numberContainer.style.position = 'absolute';
+            numberContainer.style.width = '100%';
+            numberContainer.style.height = '100%';
+            numberContainer.style.transform = `rotate(${i * 30}deg)`;
+            numberContainer.style.top = '0';
+            numberContainer.style.left = '0';
+
+            const number = document.createElement('div');
+            number.style.position = 'absolute';
+            number.style.color = 'var(--text-color)';
+            number.style.fontFamily = "'Helvetica Neue', Arial, sans-serif";
+            number.style.fontSize = '4vmin';
+            number.style.fontWeight = '600';
+            number.style.top = '8%';
+            number.style.left = '50%';
+            number.style.transform = `translate(-50%) rotate(-${i * 30}deg)`;
+            number.textContent = i;
+
+            numberContainer.appendChild(number);
+            clockFace.appendChild(numberContainer);
+        }
+    }
+
+    function updateClock() {
+      const now = new Date();
+      const hours = now.getHours() % 12;
+      const minutes = now.getMinutes();
+      const seconds = now.getSeconds();
+
+      const hourDeg = (hours * 30) + (minutes * 0.5);
+      const minuteDeg = minutes * 6;
+      const secondDeg = seconds * 6;
+
+      document.querySelector('.hour-hand').style.transform = `translateX(-50%) rotate(${hourDeg}deg)`;
+      document.querySelector('.minute-hand').style.transform = `translateX(-50%) rotate(${minuteDeg}deg)`;
+      document.querySelector('.second-hand').style.transform = `translateX(-50%) rotate(${secondDeg}deg)`;
+
+      const dateOptions = { year: 'numeric', month: 'short', day: 'numeric' };
+      const timeOptions = { hour: '2-digit', minute: '2-digit', hour12: false };
+      const dateStr = now.toLocaleDateString(navigator.language, dateOptions);
+      const timeStr = now.toLocaleTimeString(navigator.language, timeOptions);
+      document.getElementById('dateTime').textContent = `${dateStr} ${timeStr}`;
+    }
+
+    createTicks();
+    createHourNumbers();
+    updateClock();
+    setInterval(updateClock, 1000);
+  </script>
+</body>
+</html>

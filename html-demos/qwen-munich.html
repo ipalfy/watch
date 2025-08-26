@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Munich Climate Visualizer</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3.0.1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.2.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@1.0.2"></script>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            backdrop-filter: blur(5px);
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+        h2 {
+            color: #34495e;
+            font-weight: 300;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            font-style: italic;
+        }
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin-bottom: 40px;
+        }
+        .info-panel {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        .info-box {
+            flex: 1;
+            min-width: 200px;
+            margin: 10px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        .info-box h3 {
+            margin-top: 0;
+            color: #3498db;
+            font-size: 16px;
+        }
+        .info-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .info-label {
+            font-size: 12px;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        .tab.active {
+            border-bottom: 3px solid #3498db;
+            color: #3498db;
+        }
+        .tab:hover {
+            background: #f5f7fa;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #95a5a6;
+            font-size: 12px;
+        }
+        .month-selector {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .month-btn {
+            padding: 8px 12px;
+            margin: 5px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .month-btn.active {
+            background: #3498db;
+            color: white;
+        }
+        .month-btn:hover {
+            background: #ddd;
+        }
+        .month-btn.active:hover {
+            background: #2980b9;
+        }
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            .chart-container {
+                height: 300px;
+            }
+            .info-box {
+                min-width: 150px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Munich Climate Visualizer</h1>
+        <div class="subtitle">Monthly weather patterns in the Bavarian capital</div>
+        
+        <div class="info-panel">
+            <div class="info-box">
+                <h3>Annual Sunshine</h3>
+                <div class="info-value" id="sunshine-hours">1,717 h</div>
+                <div class="info-label">Total daylight hours</div>
+            </div>
+            <div class="info-box">
+                <h3>Average Temperature</h3>
+                <div class="info-value" id="avg-temp">8.7°C</div>
+                <div class="info-label">Year-round average</div>
+            </div>
+            <div class="info-box">
+                <h3>Annual Precipitation</h3>
+                <div class="info-value" id="annual-rain">967 mm</div>
+                <div class="info-label">Rain & snow equivalent</div>
+            </div>
+            <div class="info-box">
+                <h3>Seasonal Variation</h3>
+                <div class="info-value" id="temp-variation">24.5°C</div>
+                <div class="info-label">July high to January low</div>
+            </div>
+        </div>
+        
+        <div class="month-selector" id="monthSelector">
+            <!-- Month buttons will be added by JavaScript -->
+        </div>
+        
+        <div class="tabs">
+            <div class="tab active" data-tab="temperature">Temperature & Sun</div>
+            <div class="tab" data-tab="precipitation">Precipitation</div>
+            <div class="tab" data-tab="daylight">Daylight Analysis</div>
+        </div>
+        
+        <div class="tab-content active" id="temperature-tab">
+            <h2>Temperature & Daylight Patterns</h2>
+            <div class="chart-container">
+                <canvas id="temperatureChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="tab-content" id="precipitation-tab">
+            <h2>Precipitation & Humidity</h2>
+            <div class="chart-container">
+                <canvas id="precipitationChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="tab-content" id="daylight-tab">
+            <h2>Daylight & Solar Analysis</h2>
+            <div class="chart-container">
+                <canvas id="daylightChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="footer">
+            Data sources: German Weather Service (DWD), TimeAndDate.com, historical climate records for Munich (48.1351° N, 11.5820° E)
+        </div>
+    </div>
+
+    <script>
+        // Munich monthly climate data (based on historical averages)
+        const munichData = {
+            months: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+            // Temperature data in °C
+            avgHighs: [2.1, 3.5, 8.4, 13.3, 18.0, 21.4, 23.5, 23.1, 19.3, 13.5, 7.0, 3.1],
+            avgLows: [-4.0, -3.4, 0.4, 3.3, 7.7, 11.0, 12.8, 12.5, 9.4, 5.3, 0.9, -2.5],
+            avgTemps: [-0.9, 0.1, 4.4, 8.3, 12.9, 16.2, 18.2, 17.8, 14.4, 9.4, 4.0, 0.3],
+            // Precipitation in mm
+            avgRainfall: [48, 45, 58, 70, 93, 123, 118, 115, 86, 65, 58, 58],
+            maxRainfall: [89, 78, 95, 112, 145, 178, 165, 158, 125, 98, 85, 82],
+            rainyDays: [10, 9, 11, 11, 12, 13, 12, 11, 10, 9, 10, 11],
+            // Sun data
+            daylightHours: [8.8, 10.2, 11.9, 13.8, 15.3, 16.1, 15.7, 14.2, 12.5, 10.7, 9.1, 8.3],
+            sunshineHours: [2.4, 3.4, 4.8, 6.1, 7.2, 7.6, 8.1, 7.4, 6.0, 4.2, 2.6, 2.0],
+            // Derived data
+            avgHumidity: [86, 82, 76, 72, 71, 72, 72, 74, 79, 84, 87, 87],
+            uvIndex: [1, 1, 3, 4, 6, 7, 7, 6, 4, 2, 1, 1]
+        };
+
+        // Calculate annual totals
+        const annualSunshine = munichData.sunshineHours.reduce((a, b) => a + b * 30.4, 0).toFixed(0);
+        const annualRain = munichData.avgRainfall.reduce((a, b) => a + b, 0);
+        const tempVariation = Math.max(...munichData.avgHighs) - Math.min(...munichData.avgLows);
+        const annualAvgTemp = (munichData.avgTemps.reduce((a, b) => a + b, 0) / 12).toFixed(1);
+
+        // Update info boxes
+        document.getElementById('sunshine-hours').textContent = `${annualSunshine} h`;
+        document.getElementById('avg-temp').textContent = `${annualAvgTemp}°C`;
+        document.getElementById('annual-rain').textContent = `${annualRain} mm`;
+        document.getElementById('temp-variation').textContent = `${tempVariation.toFixed(1)}°C`;
+
+        // Create month selector buttons
+        const monthSelector = document.getElementById('monthSelector');
+        munichData.months.forEach((month, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'month-btn';
+            btn.textContent = month;
+            btn.dataset.monthIndex = i;
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.month-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                highlightMonth(i);
+            });
+            monthSelector.appendChild(btn);
+        });
+        document.querySelector('.month-btn').classList.add('active');
+
+        // Tab functionality
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(`${tab.dataset.tab}-tab`).classList.add('active');
+            });
+        });
+
+        // Chart configurations
+        const chartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    type: 'category',
+                    grid: {
+                        display: false
+                    }
+                },
+                y: {
+                    beginAtZero: false
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false
+                }
+            },
+            interaction: {
+                mode: 'nearest',
+                axis: 'x',
+                intersect: false
+            }
+        };
+
+        // Temperature Chart
+        const tempCtx = document.getElementById('temperatureChart').getContext('2d');
+        const temperatureChart = new Chart(tempCtx, {
+            type: 'line',
+            data: {
+                labels: munichData.months,
+                datasets: [
+                    {
+                        label: 'Average High (°C)',
+                        data: munichData.avgHighs,
+                        borderColor: '#e74c3c',
+                        backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: false
+                    },
+                    {
+                        label: 'Average Low (°C)',
+                        data: munichData.avgLows,
+                        borderColor: '#3498db',
+                        backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: false
+                    },
+                    {
+                        label: 'Daily Sunshine (hours)',
+                        data: munichData.sunshineHours,
+                        borderColor: '#f39c12',
+                        backgroundColor: 'rgba(243, 156, 18, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: false,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                ...chartOptions,
+                scales: {
+                    ...chartOptions.scales,
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Temperature (°C)'
+                        }
+                    },
+                    y1: {
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: 'Sunshine (hours)'
+                        },
+                        grid: {
+                            drawOnChartArea: false
+                        }
+                    }
+                },
+                plugins: {
+                    ...chartOptions.plugins,
+                    annotation: {
+                        annotations: {}
+                    }
+                }
+            }
+        });
+
+        // Precipitation Chart
+        const precipCtx = document.getElementById('precipitationChart').getContext('2d');
+        const precipitationChart = new Chart(precipCtx, {
+            type: 'bar',
+            data: {
+                labels: munichData.months,
+                datasets: [
+                    {
+                        label: 'Avg Rainfall (mm)',
+                        data: munichData.avgRainfall,
+                        backgroundColor: 'rgba(52, 152, 219, 0.7)',
+                        borderColor: 'rgba(52, 152, 219, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Max Rainfall (mm)',
+                        data: munichData.maxRainfall,
+                        backgroundColor: 'rgba(41, 128, 185, 0.3)',
+                        borderColor: 'rgba(41, 128, 185, 1)',
+                        borderWidth: 1,
+                        type: 'line',
+                        tension: 0.3
+                    },
+                    {
+                        label: 'Rainy Days',
+                        data: munichData.rainyDays,
+                        backgroundColor: 'rgba(142, 68, 173, 0.2)',
+                        borderColor: 'rgba(142, 68, 173, 1)',
+                        borderWidth: 1,
+                        type: 'line',
+                        tension: 0.3,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                ...chartOptions,
+                scales: {
+                    ...chartOptions.scales,
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Rainfall (mm)'
+                        },
+                        beginAtZero: true
+                    },
+                    y1: {
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: 'Rainy Days'
+                        },
+                        grid: {
+                            drawOnChartArea: false
+                        },
+                        beginAtZero: true,
+                        max: 20
+                    }
+                },
+                plugins: {
+                    ...chartOptions.plugins,
+                    annotation: {
+                        annotations: {}
+                    }
+                }
+            }
+        });
+
+        // Daylight Chart
+        const daylightCtx = document.getElementById('daylightChart').getContext('2d');
+        const daylightChart = new Chart(daylightCtx, {
+            type: 'line',
+            data: {
+                labels: munichData.months,
+                datasets: [
+                    {
+                        label: 'Daylight Hours',
+                        data: munichData.daylightHours,
+                        borderColor: '#f39c12',
+                        backgroundColor: 'rgba(243, 156, 18, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: false
+                    },
+                    {
+                        label: 'Sunshine Hours',
+                        data: munichData.sunshineHours,
+                        borderColor: '#e67e22',
+                        backgroundColor: 'rgba(230, 126, 34, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: false
+                    },
+                    {
+                        label: 'UV Index',
+                        data: munichData.uvIndex,
+                        borderColor: '#e74c3c',
+                        backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: false,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                ...chartOptions,
+                scales: {
+                    ...chartOptions.scales,
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Hours'
+                        }
+                    },
+                    y1: {
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: 'UV Index'
+                        },
+                        grid: {
+                            drawOnChartArea: false
+                        },
+                        min: 0,
+                        max: 8
+                    }
+                },
+                plugins: {
+                    ...chartOptions.plugins,
+                    annotation: {
+                        annotations: {}
+                    }
+                }
+            }
+        });
+
+        // Highlight month function
+        function highlightMonth(monthIndex) {
+            const annotation = {
+                type: 'box',
+                xMin: monthIndex - 0.5,
+                xMax: monthIndex + 0.5,
+                backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                borderColor: 'rgba(52, 152, 219, 0.5)',
+                borderWidth: 1
+            };
+
+            temperatureChart.options.plugins.annotation.annotations = { highlight: annotation };
+            precipitationChart.options.plugins.annotation.annotations = { highlight: annotation };
+            daylightChart.options.plugins.annotation.annotations = { highlight: annotation };
+
+            temperatureChart.update();
+            precipitationChart.update();
+            daylightChart.update();
+        }
+
+        // Initial highlight
+        highlightMonth(0);
+    </script>
+</body>
+</html>

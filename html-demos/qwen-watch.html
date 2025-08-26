@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<style>
+		body {
+			background-color: white;
+			/* Ensure the iframe has a white background */
+		}
+	</style>
+</head>
+
+<body>
+	<!DOCTYPE html>
+	<html lang="en">
+
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>Braun-Style Wristwatch</title>
+		<style>
+			body {
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				min-height: 100vh;
+				margin: 0;
+				background-color: #f0f0f0;
+				font-family: 'Helvetica Neue', Arial, sans-serif;
+				transition: background-color 0.3s ease;
+				overflow: hidden;
+			}
+
+			body.dark-mode {
+				background-color: #1a1a1a;
+			}
+
+			.watch-container {
+				position: relative;
+				width: 90vmin;
+				height: 90vmin;
+				max-width: 500px;
+				max-height: 500px;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+			}
+
+			.watch-body {
+				position: relative;
+				width: 100%;
+				height: 100%;
+				border-radius: 50%;
+				background-color: #f8f8f8;
+				box-shadow:
+					0 10px 30px rgba(0, 0, 0, 0.1),
+					inset 0 0 20px rgba(0, 0, 0, 0.05);
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				transition: background-color 0.3s ease;
+			}
+
+			body.dark-mode .watch-body {
+				background-color: #2a2a2a;
+				box-shadow:
+					0 10px 30px rgba(0, 0, 0, 0.3),
+					inset 0 0 20px rgba(0, 0, 0, 0.2);
+			}
+
+			.watch-face {
+				position: relative;
+				width: 85%;
+				height: 85%;
+				border-radius: 50%;
+				background-color: #ffffff;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				transition: background-color 0.3s ease;
+				overflow: hidden;
+				z-index: 2;
+			}
+
+			body.dark-mode .watch-face {
+				background-color: #1a1a1a;
+			}
+
+			.hour-mark {
+				position: absolute;
+				width: 2px;
+				height: 12px;
+				background-color: #333;
+				left: 50%;
+				margin-left: -1px;
+				transform-origin: 50% 50%;
+			}
+
+			body.dark-mode .hour-mark {
+				background-color: #ddd;
+			}
+
+			.hour-mark.major {
+				width: 3px;
+				height: 18px;
+				margin-left: -1.5px;
+			}
+
+			.hour-number {
+				position: absolute;
+				font-size: calc(2.5vmin);
+				font-weight: bold;
+				color: #333;
+				width: 20px;
+				height: 20px;
+				text-align: center;
+				transform-origin: 50% 50%;
+				margin-left: -10px;
+				margin-top: -10px;
+			}
+
+			body.dark-mode .hour-number {
+				color: #ddd;
+			}
+
+			.hand {
+				position: absolute;
+				transform-origin: bottom center;
+				border-radius: 2px;
+				bottom: 50%;
+				left: 50%;
+			}
+
+			.hour-hand {
+				width: 4px;
+				height: 30%;
+				background-color: #333;
+				margin-left: -2px;
+				z-index: 3;
+			}
+
+			body.dark-mode .hour-hand {
+				background-color: #ddd;
+			}
+
+			.minute-hand {
+				width: 3px;
+				height: 40%;
+				background-color: #333;
+				margin-left: -1.5px;
+				z-index: 2;
+			}
+
+			body.dark-mode .minute-hand {
+				background-color: #ddd;
+			}
+
+			.second-hand {
+				width: 1px;
+				height: 45%;
+				background-color: #cc0000;
+				margin-left: -0.5px;
+				z-index: 1;
+			}
+
+			.stopwatch-hand {
+				width: 2px;
+				height: 38%;
+				background-color: #0066cc;
+				margin-left: -1px;
+				z-index: 1;
+			}
+
+			.center-dot {
+				position: absolute;
+				width: 10px;
+				height: 10px;
+				background-color: #333;
+				border-radius: 50%;
+				z-index: 4;
+			}
+
+			body.dark-mode .center-dot {
+				background-color: #ddd;
+			}
+
+			.date-display {
+				position: absolute;
+				bottom: -30%;
+				font-size: calc(2vmin);
+				font-weight: bold;
+				letter-spacing: 1px;
+				color: #333;
+				background-color: rgba(255, 255, 255, 0.7);
+				padding: 5px 15px;
+				border-radius: 15px;
+				transform: translateZ(-10px);
+				box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+				transition: all 0.3s ease;
+				z-index: 1;
+			}
+
+			body.dark-mode .date-display {
+				color: #ddd;
+				background-color: rgba(0, 0, 0, 0.5);
+				box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+			}
+
+			.knob-container {
+				position: absolute;
+				right: -5%;
+				top: 50%;
+				transform: translateY(-50%);
+				display: flex;
+				flex-direction: column;
+				gap: 15px;
+			}
+
+			.knob-wrapper {
+				position: relative;
+				width: 30px;
+				height: 40px;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+			}
+
+			.knob {
+				width: 8px;
+				height: 20px;
+				background-color: #ddd;
+				box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+				cursor: pointer;
+				z-index: 10;
+				transition: background-color 0.3s ease;
+				position: relative;
+				border-radius: 2px;
+			}
+
+			.knob:hover {
+				background-color: #ccc;
+			}
+
+			body.dark-mode .knob {
+				background-color: #444;
+			}
+
+			body.dark-mode .knob:hover {
+				background-color: #555;
+			}
+
+			.knob::before {
+				content: '';
+				position: absolute;
+				width: 16px;
+				height: 28px;
+				border: 1px solid #999;
+				top: 50%;
+				left: 50%;
+				transform: translate(-50%, -50%);
+				pointer-events: none;
+				border-radius: 3px;
+			}
+
+			body.dark-mode .knob::before {
+				border: 1px solid #777;
+			}
+
+			.knob-label {
+				position: absolute;
+				font-size: 10px;
+				font-weight: bold;
+				color: #333;
+				white-space: nowrap;
+				transform-origin: 0 50%;
+				left: 25px;
+				top: 50%;
+				transform: translateY(-50%);
+			}
+
+			body.dark-mode .knob-label {
+				color: #ddd;
+			}
+
+			.stopwatch-face {
+				position: absolute;
+				width: 40%;
+				height: 40%;
+				border-radius: 50%;
+				background-color: #f0f0f0;
+				border: 2px solid #ddd;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				z-index: 3;
+			}
+
+			body.dark-mode .stopwatch-face {
+				background-color: #2a2a2a;
+				border: 2px solid #444;
+			}
+
+			.stopwatch-center-dot {
+				position: absolute;
+				width: 6px;
+				height: 6px;
+				background-color: #0066cc;
+				border-radius: 50%;
+				z-index: 2;
+			}
+
+			.stopwatch-mark {
+				position: absolute;
+				width: 1px;
+				height: 6px;
+				background-color: #666;
+				left: 50%;
+				margin-left: -0.5px;
+				transform-origin: 50% 50%;
+			}
+
+			body.dark-mode .stopwatch-mark {
+				background-color: #aaa;
+			}
+
+			.stopwatch-mark.major {
+				width: 2px;
+				height: 10px;
+				margin-left: -1px;
+			}
+
+			.reset-knob-wrapper {
+				position: absolute;
+				left: -5%;
+				top: 50%;
+				transform: translateY(-50%);
+				width: 30px;
+				height: 40px;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+			}
+
+			.reset-knob-label {
+				position: absolute;
+				font-size: 10px;
+				font-weight: bold;
+				color: #333;
+				white-space: nowrap;
+				transform-origin: 100% 50%;
+				right: 25px;
+				top: 50%;
+				transform: translateY(-50%);
+			}
+
+			body.dark-mode .reset-knob-label {
+				color: #ddd;
+			}
+		</style>
+	</head>
+
+	<body>
+		<div class="watch-container">
+			<div class="watch-body">
+				<div class="watch-face">
+					<!-- Hour marks and numbers will be generated by JavaScript -->
+					<div class="hand hour-hand"></div>
+					<div class="hand minute-hand"></div>
+					<div class="hand second-hand"></div>
+					<div class="hand stopwatch-hand"></div>
+					<div class="center-dot"></div>
+					<div class="date-display">January 1, 2023</div>
+					<div class="stopwatch-face">
+						<div class="stopwatch-center-dot"></div>
+					</div>
+				</div>
+				<div class="knob-container">
+					<div class="knob-wrapper">
+						<div class="knob" id="modeKnob" title="Toggle Dark/Light Mode"></div>
+						<div class="knob-label">MODE</div>
+					</div>
+					<div class="knob-wrapper">
+						<div class="knob" id="stopwatchKnob" title="Start/Stop Stopwatch"></div>
+						<div class="knob-label">START</div>
+					</div>
+				</div>
+				<div class="reset-knob-wrapper">
+					<div class="knob" id="resetKnob" title="Reset Stopwatch"></div>
+					<div class="reset-knob-label">RESET</div>
+				</div>
+			</div>
+		</div>
+		<script>
+			document.addEventListener('DOMContentLoaded', function () {
+				// Create hour marks and numbers
+				const watchFace = document.querySelector('.watch-face');
+				const watchFaceSize = watchFace.offsetWidth;
+				const radius = watchFaceSize / 2;
+
+				for (let i = 0; i < 60; i++) {
+					const mark = document.createElement('div');
+					mark.className = 'hour-mark';
+					if (i % 5 === 0) {
+						mark.classList.add('major');
+					}
+					const angle = (i * 6) * (Math.PI / 180);
+					const markRadius = radius * 0.9;
+					const markHeight = parseInt(mark.classList.contains('major') ? '18' : '12');
+
+					mark.style.width = mark.classList.contains('major') ? '3px' : '2px';
+					mark.style.height = markHeight + 'px';
+					mark.style.left = '50%';
+					mark.style.top = '50%';
+					mark.style.transform = `translate(-50%, -${markRadius}px) rotate(${i * 6}deg)`;
+					mark.style.transformOrigin = `50% ${markRadius}px`;
+					watchFace.appendChild(mark);
+				}
+
+				// Create hour numbers
+				for (let i = 1; i <= 12; i++) {
+					const hourNumber = document.createElement('div');
+					hourNumber.className = 'hour-number';
+					hourNumber.textContent = i;
+					const angle = (i * 30) * (Math.PI / 180);
+					const numberRadius = radius * 0.75;
+					const x = Math.sin(angle) * numberRadius;
+					const y = -Math.cos(angle) * numberRadius;
+					hourNumber.style.left = `calc(50% + ${x}px)`;
+					hourNumber.style.top = `calc(50% + ${y}px)`;
+					watchFace.appendChild(hourNumber);
+				}
+
+				// Create stopwatch face marks
+				const stopwatchFace = document.querySelector('.stopwatch-face');
+				const stopwatchRadius = stopwatchFace.offsetWidth / 2;
+
+				for (let i = 0; i < 60; i++) {
+					const mark = document.createElement('div');
+					mark.className = 'stopwatch-mark';
+					if (i % 5 === 0) {
+						mark.classList.add('major');
+					}
+					const angle = (i * 6) * (Math.PI / 180);
+					const markRadius = stopwatchRadius * 0.8;
+					const markHeight = parseInt(mark.classList.contains('major') ? '10' : '6');
+
+					mark.style.width = mark.classList.contains('major') ? '2px' : '1px';
+					mark.style.height = markHeight + 'px';
+					mark.style.left = '50%';
+					mark.style.top = '50%';
+					mark.style.transform = `translate(-50%, -${markRadius}px) rotate(${i * 6}deg)`;
+					mark.style.transformOrigin = `50% ${markRadius}px`;
+					stopwatchFace.appendChild(mark);
+				}
+
+				// Get elements
+				const hourHand = document.querySelector('.hour-hand');
+				const minuteHand = document.querySelector('.minute-hand');
+				const secondHand = document.querySelector('.second-hand');
+				const stopwatchHand = document.querySelector('.stopwatch-hand');
+				const dateDisplay = document.querySelector('.date-display');
+				const modeKnob = document.getElementById('modeKnob');
+				const stopwatchKnob = document.getElementById('stopwatchKnob');
+				const resetKnob = document.getElementById('resetKnob');
+
+				// Time variables
+				let isDarkMode = false;
+				let stopwatchRunning = false;
+				let stopwatchStartTime = 0;
+				let stopwatchElapsedTime = 0;
+				let stopwatchInterval = null;
+
+				// Update clock function
+				function updateClock() {
+					const now = new Date();
+
+					// Update analog clock
+					const seconds = now.getSeconds();
+					const minutes = now.getMinutes();
+					const hours = now.getHours();
+
+					const secondDegrees = seconds * 6;
+					const minuteDegrees = (minutes * 6) + (seconds * 0.1);
+					const hourDegrees = (hours % 12) * 30 + (minutes * 0.5);
+
+					secondHand.style.transform = `rotate(${secondDegrees}deg)`;
+					minuteHand.style.transform = `rotate(${minuteDegrees}deg)`;
+					hourHand.style.transform = `rotate(${hourDegrees}deg)`;
+
+					// Update date
+					const options = { year: 'numeric', month: 'long', day: 'numeric' };
+					dateDisplay.textContent = now.toLocaleDateString(undefined, options);
+
+					// Update stopwatch hand if not running
+					if (!stopwatchRunning) {
+						const totalElapsed = stopwatchElapsedTime;
+						const stopwatchSeconds = (totalElapsed / 1000) % 60;
+						const stopwatchDegrees = stopwatchSeconds * 6;
+						stopwatchHand.style.transform = `rotate(${stopwatchDegrees}deg)`;
+					}
+				}
+
+				// Stopwatch functions
+				function updateStopwatch() {
+					if (stopwatchRunning) {
+						const currentTime = Date.now();
+						const elapsed = stopwatchElapsedTime + (currentTime - stopwatchStartTime);
+
+						// Update stopwatch hand
+						const stopwatchSeconds = (elapsed / 1000) % 60;
+						const stopwatchDegrees = stopwatchSeconds * 6;
+						const stopwatchHandElement = document.createElement('div');
+						stopwatchHandElement.className = 'hand stopwatch-hand';
+						document.querySelector('.stopwatch-face').appendChild(stopwatchHandElement);
+						stopwatchHandElement.style.transform = `rotate(${stopwatchDegrees}deg)`;
+
+						// Update display
+						const totalSeconds = Math.floor(elapsed / 1000);
+						const displayMinutes = Math.floor(totalSeconds / 60);
+						const displaySeconds = totalSeconds % 60;
+						const centiseconds = Math.floor((elapsed % 1000) / 10);
+
+						const formattedMinutes = displayMinutes.toString().padStart(2, '0');
+						const formattedSeconds = displaySeconds.toString().padStart(2, '0');
+						const formattedCentiseconds = centiseconds.toString().padStart(2, '0');
+					}
+				}
+
+				function toggleStopwatch() {
+					if (stopwatchRunning) {
+						// Stop the stopwatch
+						stopwatchRunning = false;
+						stopwatchElapsedTime += Date.now() - stopwatchStartTime;
+						clearInterval(stopwatchInterval);
+					} else {
+						// Start the stopwatch
+						stopwatchRunning = true;
+						stopwatchStartTime = Date.now();
+						stopwatchInterval = setInterval(updateStopwatch, 10);
+					}
+				}
+
+				function resetStopwatch() {
+					stopwatchRunning = false;
+					clearInterval(stopwatchInterval);
+					stopwatchElapsedTime = 0;
+					stopwatchHand.style.transform = `rotate(0deg)`;
+
+					// Reset stopwatch face
+					const stopwatchFace = document.querySelector('.stopwatch-face');
+					const existingHand = stopwatchFace.querySelector('.stopwatch-hand:not(.stopwatch-center-dot)');
+					if (existingHand) {
+						existingHand.remove();
+					}
+				}
+
+				// Mode toggle function
+				function toggleMode() {
+					isDarkMode = !isDarkMode;
+					if (isDarkMode) {
+						document.body.classList.add('dark-mode');
+					} else {
+						document.body.classList.remove('dark-mode');
+					}
+				}
+
+				// Event listeners for knobs
+				modeKnob.addEventListener('click', toggleMode);
+				stopwatchKnob.addEventListener('click', toggleStopwatch);
+				resetKnob.addEventListener('click', resetStopwatch);
+
+				// Initialize
+				updateClock();
+				setInterval(updateClock, 1000);
+
+				// Handle window resize
+				window.addEventListener('resize', function () {
+					// Clear existing marks and numbers
+					const marks = document.querySelectorAll('.hour-mark, .hour-number, .stopwatch-mark');
+					marks.forEach(mark => mark.remove());
+
+					// Recreate marks and numbers
+					const watchFace = document.querySelector('.watch-face');
+					const watchFaceSize = watchFace.offsetWidth;
+					const radius = watchFaceSize / 2;
+
+					for (let i = 0; i < 60; i++) {
+						const mark = document.createElement('div');
+						mark.className = 'hour-mark';
+						if (i % 5 === 0) {
+							mark.classList.add('major');
+						}
+						const angle = (i * 6) * (Math.PI / 180);
+						const markRadius = radius * 0.9;
+						const markHeight = parseInt(mark.classList.contains('major') ? '18' : '12');
+
+						mark.style.width = mark.classList.contains('major') ? '3px' : '2px';
+						mark.style.height = markHeight + 'px';
+						mark.style.left = '50%';
+						mark.style.top = '50%';
+						mark.style.transform = `translate(-50%, -${markRadius}px) rotate(${i * 6}deg)`;
+						mark.style.transformOrigin = `50% ${markRadius}px`;
+						watchFace.appendChild(mark);
+					}
+
+					// Create hour numbers
+					for (let i = 1; i <= 12; i++) {
+						const hourNumber = document.createElement('div');
+						hourNumber.className = 'hour-number';
+						hourNumber.textContent = i;
+						const angle = (i * 30) * (Math.PI / 180);
+						const numberRadius = radius * 0.75;
+						const x = Math.sin(angle) * numberRadius;
+						const y = -Math.cos(angle) * numberRadius;
+						hourNumber.style.left = `calc(50% + ${x}px)`;
+						hourNumber.style.top = `calc(50% + ${y}px)`;
+						watchFace.appendChild(hourNumber);
+					}
+
+					// Recreate stopwatch marks
+					const stopwatchFace = document.querySelector('.stopwatch-face');
+					const stopwatchRadius = stopwatchFace.offsetWidth / 2;
+
+					for (let i = 0; i < 60; i++) {
+						const mark = document.createElement('div');
+						mark.className = 'stopwatch-mark';
+						if (i % 5 === 0) {
+							mark.classList.add('major');
+						}
+						const angle = (i * 6) * (Math.PI / 180);
+						const markRadius = stopwatchRadius * 0.8;
+						const markHeight = parseInt(mark.classList.contains('major') ? '10' : '6');
+
+						mark.style.width = mark.classList.contains('major') ? '2px' : '1px';
+						mark.style.height = markHeight + 'px';
+						mark.style.left = '50%';
+						mark.style.top = '50%';
+						mark.style.transform = `translate(-50%, -${markRadius}px) rotate(${i * 6}deg)`;
+						mark.style.transformOrigin = `50% ${markRadius}px`;
+						stopwatchFace.appendChild(mark);
+					}
+				});
+			});
+		</script>
+	</body>
+
+	</html>

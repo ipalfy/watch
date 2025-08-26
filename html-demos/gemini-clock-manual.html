@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Braun-Style Analog Watch</title>
+	<script src="https://cdn.tailwindcss.com"></script>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+	<style>
+		:root {
+			--bg-color-light: #f0f0f0;
+			--bg-color-dark: #1a1a1a;
+			--watch-face-light: #ffffff;
+			--watch-face-dark: #2d2d2d;
+			--text-color-light: #333333;
+			--text-color-dark: #e0e0e0;
+			--marker-color-light: #b0b0b0;
+			--marker-color-dark: #555555;
+			--marker-major-light: #000000;
+			--marker-major-dark: #e0e0e0;
+			--hand-hour-light: #bf0404;
+			--hand-hour-dark: #e0e0e0;
+			--hand-minute-light: #000000;
+			--hand-minute-dark: #e0e0e0;
+			--hand-second-color: #fdd835;
+			/* Braun yellow */
+			--chrono-hand-color: #d32f2f;
+			/* Braun red */
+			--case-shadow-light:
+				-10px -10px 20px rgba(255, 255, 255, 0.7),
+				10px 10px 20px rgba(0, 0, 0, 0.15),
+				inset -2px -2px 4px rgba(0, 0, 0, 0.1),
+				inset 2px 2px 4px rgba(255, 255, 255, 0.8);
+			--case-shadow-dark:
+				-8px -8px 15px rgba(45, 45, 45, 0.5),
+				8px 8px 15px rgba(0, 0, 0, 0.3),
+				inset -2px -2px 4px rgba(0, 0, 0, 0.5),
+				inset 2px 2px 4px rgba(45, 45, 45, 0.4);
+		}
+
+		body {
+			font-family: 'Inter', sans-serif;
+			transition: background-color 0.3s ease;
+		}
+
+		.dark-mode {
+			background-color: var(--bg-color-dark);
+		}
+
+		.light-mode {
+			background-color: var(--bg-color-light);
+		}
+
+		.watch {
+			width: 320px;
+			height: 320px;
+			box-shadow: var(--case-shadow-light);
+		}
+
+		.dark-mode .watch {
+			box-shadow: var(--case-shadow-dark);
+		}
+
+		.watch-face {
+			background-color: var(--watch-face-light);
+			transition: background-color 0.3s ease;
+		}
+
+		.dark-mode .watch-face {
+			background-color: var(--watch-face-dark);
+		}
+
+		.marker-line {
+			position: absolute;
+			top: 0;
+			left: 50%;
+			transform: translateX(-50%);
+			background-color: var(--marker-color-light);
+			transition: background-color 0.3s ease;
+		}
+
+		.dark-mode .marker-line {
+			background-color: var(--marker-color-dark);
+		}
+
+		.dark-mode .marker-line.major {
+			background-color: var(--marker-major-dark);
+		}
+
+		.marker-line.major {
+			background-color: var(--marker-major-light);
+		}
+
+		.hand {
+			position: absolute;
+			left: 50%;
+			top: 50%;
+			transform-origin: bottom;
+			border-radius: 2px;
+			z-index: 20;
+		}
+
+		.center-pivot {
+			z-index: 25;
+		}
+
+		.hour-hand {
+			width: 6px;
+			height: 65px;
+			background-color: var(--hand-hour-light);
+			transition: background-color 0.3s ease;
+		}
+
+		.dark-mode .hour-hand {
+			background-color: var(--hand-hour-dark);
+		}
+
+		.minute-hand {
+			width: 4px;
+			height: 100px;
+			background-color: var(--hand-minute-light);
+			transition: background-color 0.3s ease;
+		}
+
+		.dark-mode .minute-hand {
+			background-color: var(--hand-minute-dark);
+		}
+
+		.second-hand {
+			width: 2px;
+			height: 110px;
+			background-color: var(--hand-second-color);
+		}
+
+		.date-display {
+			color: var(--text-color-light);
+			transition: color 0.3s ease;
+			z-index: 5;
+		}
+
+		.dark-mode .date-display {
+			color: var(--text-color-dark);
+		}
+
+		.chrono-dial {
+			width: 80px;
+			height: 80px;
+			top: 60px;
+			border: 1px solid var(--marker-color-light);
+			background-color: var(--watch-face-light);
+			transition: background-color 0.3s ease, border-color 0.3s ease;
+			z-index: 10;
+		}
+
+		.dark-mode .chrono-dial {
+			border-color: var(--marker-color-dark);
+			background-color: var(--watch-face-dark);
+		}
+
+		.chrono-hand {
+			z-index: 11;
+		}
+
+		.watch-button {
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			width: 40px;
+			height: 12px;
+			margin-top: -6px;
+			/* half of height */
+			background: linear-gradient(to bottom, #c0c0c0, #f0f0f0);
+			border: 1px solid #a0a0a0;
+			cursor: pointer;
+			box-shadow: 0 2px 3px rgba(0, 0, 0, 0.3);
+			transition: all 0.1s ease;
+			transform-origin: 0 50%;
+		}
+
+		.watch-button:active {
+			background: linear-gradient(to top, #c0c0c0, #f0f0f0);
+			box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
+		}
+
+		.dark-mode .watch-button {
+			background: linear-gradient(to bottom, #3a3a3a, #5a5a5a);
+			border-color: #222;
+		}
+
+		#start-stop-button {
+			transform: translate(142px, -100px) rotate(60deg);
+		}
+
+		#reset-button {
+			transform: translate(167px, -20px)  rotate(90deg);
+		}
+
+		#mode-toggle {
+			transform: translate(133px, 100px)  rotate(-60deg);
+		}
+
+		.button-label {
+			position: absolute;
+			font-size: 10px;
+			font-weight: 500;
+			color: var(--marker-color-light);
+			z-index: 15;
+		}
+
+		.dark-mode .button-label {
+			color: var(--marker-color-dark);
+		}
+
+		#label-ss {
+			top: 95px;
+			right: 50px;
+			transform: rotate(-30deg);
+		}
+
+		#label-rst {
+			top: 145px;
+			right: 35px;
+		}
+
+		#label-mode {
+			top: 195px;
+			right: 50px;
+			transform: rotate(30deg);
+		}
+
+		.hour-number {
+			position: absolute;
+			width: 30px;
+			height: 30px;
+			top: 50%;
+			left: 50%;
+			margin: -15px 0 0 -15px;
+			text-align: center;
+			line-height: 30px;
+			font-size: 20px;
+			font-weight: 500;
+			color: var(--text-color-light);
+			transition: color 0.3s ease;
+		}
+
+		.dark-mode .hour-number {
+			color: var(--text-color-dark);
+		}
+	</style>
+</head>
+
+<body class="light-mode flex items-center justify-center min-h-screen">
+	<div id="watch" class="watch relative rounded-full flex items-center justify-center">
+		<div class="watch-face absolute w-full h-full rounded-full border-8 border-gray-300 dark:border-gray-700">
+			<!-- Markers -->
+			<div class="markers-container absolute w-full h-full z-0"></div>
+			<!-- Numbers -->
+			<div class="numbers-container absolute w-full h-full z-1"></div>
+			<!-- Button Labels -->
+			<div id="label-ss" class="button-label">Start/Stop</div>
+			<div id="label-rst" class="button-label">Reset</div>
+			<div id="label-mode" class="button-label">Mode</div>
+			<!-- Hands -->
+			<div class="hand hour-hand"></div>
+			<div class="hand minute-hand"></div>
+			<div class="hand second-hand"></div>
+			<div class="center-pivot absolute w-4 h-4 bg-black dark:bg-white rounded-full top-1/2 left-1/2 -mt-2 -ml-2"></div>
+			<!-- Date Display -->
+			<div class="date-display absolute left-[120px] top-[210px] -mt-3 text-sm font-semibold text-center"></div>
+			<!-- Digital Display -->
+			<div class="digital-display absolute left-[50px] top-[150px] -mt-3 text-sm bg-red-600 text-white p-1 rounded">time</div>
+			<!-- Chronometer -->
+			<div class="chrono-dial absolute left-1/2 -ml-10 rounded-full flex items-center justify-center">
+				<div class="hand chrono-hand w-0.5 h-[30px] bg-red-600"></div>
+				<div class="absolute w-2 h-2 bg-red-600 rounded-full top-1/2 left-1/2 -mt-1 -ml-1 z-10"></div>
+			</div>
+			<div class="chrono-number absolute w-0.9 h-0.5 top-[105px] left-[130px] -mt-0.25 -ml-0.25 z-10 text-sm text-center">123 sec</div>
+		</div>
+		<!-- Buttons -->
+		<button id="start-stop-button" class="watch-button"></button>
+		<button id="reset-button" class="watch-button"></button>
+		<button id="mode-toggle" class="watch-button"></button>
+	</div>
+	<script>
+		// --- DOM Elements ---
+		const body = document.body;
+		const hourHand = document.querySelector('.hour-hand');
+		const minuteHand = document.querySelector('.minute-hand');
+		const secondHand = document.querySelector('.second-hand');
+		const dateDisplay = document.querySelector('.date-display');
+		const digitalDisplay = document.querySelector('.digital-display');
+		const markersContainer = document.querySelector('.markers-container');
+		const numbersContainer = document.querySelector('.numbers-container');
+		const chronoHand = document.querySelector('.chrono-hand');
+		const chronoNumber = document.querySelector('.chrono-number');
+
+		const startStopButton = document.getElementById('start-stop-button');
+		const resetButton = document.getElementById('reset-button');
+		const modeToggleButton = document.getElementById('mode-toggle');
+
+		// --- Chronometer State ---
+		let chronoInterval = null;
+		let chronoSeconds = 0;
+		let isChronoRunning = false;
+
+		// --- Create Markers ---
+		function createMarkers() {
+			markersContainer.innerHTML = ''; // Clear previous markers
+			for (let i = 0; i < 60; i++) {
+				const rotation = i * 6;
+				const markerWrapper = document.createElement('div');
+				markerWrapper.className = 'absolute w-full h-full';
+				markerWrapper.style.transform = `rotate(${rotation}deg)`;
+
+				const markerLine = document.createElement('div');
+				markerLine.classList.add('marker-line');
+
+				if (i % 5 === 0) { // Hour marker
+					markerLine.style.width = '3px';
+					markerLine.style.height = '12px';
+					markerLine.classList.add('major');
+				} else { // Minute marker
+					markerLine.style.width = '1px';
+					markerLine.style.height = '6px';
+				}
+
+				markerWrapper.appendChild(markerLine);
+				markersContainer.appendChild(markerWrapper);
+			}
+		}
+
+		// --- Create Hour Numbers ---
+		function createHourNumbers() {
+			for (let i = 1; i <= 12; i++) {
+				const angle = i * 30 * (Math.PI / 180); // angle in radians
+				const radius = 125; // distance from center
+				const x = Math.sin(angle) * radius;
+				const y = -Math.cos(angle) * radius;
+
+				const numberEl = document.createElement('div');
+				numberEl.classList.add('hour-number');
+				numberEl.textContent = i;
+				numberEl.style.transform = `translate(${x}px, ${y}px)`;
+				numbersContainer.appendChild(numberEl);
+			}
+		}
+
+		// --- Update Clock and Date ---
+		function setDate() {
+			const now = new Date();
+
+			const seconds = now.getSeconds();
+			const secondsDegrees = (seconds / 60) * 360;
+			secondHand.style.transform = `translate(-50%, -100%) rotate(${secondsDegrees}deg)`;
+
+			const minutes = now.getMinutes();
+			const minutesDegrees = (minutes / 60) * 360 + (seconds / 60) * 6;
+			minuteHand.style.transform = `translate(-50%, -100%) rotate(${minutesDegrees}deg)`;
+
+			const hours = now.getHours();
+			const hoursDegrees = (hours / 12) * 360 + (minutes / 60) * 30;
+			hourHand.style.transform = `translate(-50%, -100%) rotate(${hoursDegrees}deg)`;
+
+			const day = String(now.getDate()).padStart(2, '0');
+			const dayOfWeek = now.toLocaleDateString(undefined, { weekday: 'long' });
+			const monthName = now.toLocaleDateString(undefined, { month: 'long' });
+			const month = String(now.getMonth() + 1).padStart(2, '0');
+
+			digitalDisplay.textContent = now.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+			dateDisplay.innerHTML = `${dayOfWeek}<br>${day}.${month} ${now.getFullYear()}`;
+		}
+
+		// --- Chronometer Logic ---
+		function handleStartStop() {
+			if (isChronoRunning) {
+				clearInterval(chronoInterval);
+				isChronoRunning = false;
+			} else {
+				const startTime = Date.now() - (chronoSeconds * 1000);
+				chronoInterval = setInterval(() => {
+					chronoSeconds = (Date.now() - startTime) / 1000;
+					const chronoDegrees = ((chronoSeconds % 60) / 60) * 360;
+					chronoHand.style.transform = `translate(-50%, -100%) rotate(${chronoDegrees}deg)`;
+					chronoNumber.textContent = chronoSeconds;
+				}, 50);
+				isChronoRunning = true;
+			}
+		}
+
+		function handleReset() {
+			clearInterval(chronoInterval);
+			isChronoRunning = false;
+			chronoSeconds = 0;
+			chronoNumber.textContent = '';
+			chronoHand.style.transform = 'translate(-50%, -100%) rotate(0deg)';
+		}
+
+		// --- Mode Toggle ---
+		function toggleMode() {
+			body.classList.toggle('dark-mode');
+			body.classList.toggle('light-mode');
+			localStorage.setItem('watch-theme', body.classList.contains('dark-mode') ? 'dark' : 'light');
+		}
+
+		// --- Load Theme Preference ---
+		function loadTheme() {
+			const savedTheme = localStorage.getItem('watch-theme');
+			if (savedTheme === 'dark') {
+				body.classList.add('dark-mode');
+				body.classList.remove('light-mode');
+			} else {
+				body.classList.add('light-mode');
+				body.classList.remove('dark-mode');
+			}
+		}
+
+		// --- Event Listeners ---
+		startStopButton.addEventListener('click', handleStartStop);
+		resetButton.addEventListener('click', handleReset);
+		modeToggleButton.addEventListener('click', toggleMode);
+
+		// --- Initialization ---
+		createMarkers();
+		createHourNumbers();
+		setDate();
+		setInterval(setDate, 1000);
+		handleReset();
+		loadTheme();
+
+	</script>
+</body>
+
+</html>
