@@ -7,6 +7,7 @@
 	<title>Braun-Style Analog Watch</title>
 	<script src="https://cdn.tailwindcss.com"></script>
 	<script>
+		/* This just for reference
 		tailwind.config = {
 			theme: {
 				extend: {
@@ -16,6 +17,7 @@
 				},
 			},
 		};
+		*/
 	</script>
 	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
 	<style>
@@ -151,6 +153,16 @@
 		}
 
 		.dark-mode .date-display {
+			color: var(--text-color-dark);
+		}
+
+		.chrono-number {
+			color: var(--text-color-light);
+			transition: color 0.3s ease;
+			z-index: 5;
+		}
+
+		.dark-mode .chrono-number {
 			color: var(--text-color-dark);
 		}
 
@@ -308,7 +320,7 @@
 				<div class="hand chrono-hand w-0.5 h-[30px] bg-red-600"></div>
 				<div class="absolute w-2 h-2 bg-red-600 rounded-full top-1/2 left-1/2 -mt-1 -ml-1 z-10"></div>
 			</div>
-			<div class="chrono-number absolute w-0.9 h-0.5 top-[105px] left-[130px] -mt-0.25 -ml-0.25 z-10 text-sm text-center">123 sec</div>
+			<div class="chrono-number absolute w-0.9 h-0.5 top-[107px] left-[123px] -mt-0.25 -ml-0.25 z-10 text-sm text-center">123 sec</div>
 		</div>
 		<!-- Buttons -->
 		<button id="start-stop-button" class="watch-button"></button>
@@ -415,12 +427,18 @@
 					chronoSeconds = (Date.now() - startTime) / 1000;
 					const chronoDegrees = ((chronoSeconds % 60) / 60) * 360;
 					chronoHand.style.transform = `translate(-50%, -100%) rotate(${chronoDegrees}deg)`;
-					chronoNumber.textContent = chronoSeconds;
+					chronoNumber.textContent = formatSeconds(chronoSeconds);
 				}, 50);
 				isChronoRunning = true;
 			}
 		}
 
+		function formatSeconds(seconds) {
+			const minutes = Math.floor(seconds / 60).toString().padStart(2, '0');
+			const wholeSeconds = Math.floor(seconds % 60).toString().padStart(2, '0');
+			const secondFraction = (seconds % 1).toFixed(2).slice(2).padStart(2, '0');
+			return `${minutes}:${wholeSeconds}:${secondFraction}`;
+		}
 		function handleReset() {
 			clearInterval(chronoInterval);
 			isChronoRunning = false;
