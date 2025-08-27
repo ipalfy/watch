@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport"
+		content="width=device-width, initial-scale=1.0">
+	<title>Chronometer</title>
+	<style>
+		.chronometer {
+			position: relative;
+			width: 200px;
+			height: 200px;
+			border: 2px solid black;
+			border-radius: 50%;
+			margin: 20px auto;
+			background-color: #f5f5f5;
+		}
+
+		.hand {
+			position: absolute;
+			width: 2px;
+			height: 80px;
+			background-color: black;
+			transform-origin: 50% 100%;
+			left: 50%;
+			top: 50%;
+		}
+
+		.lap-hand {
+			background-color: red;
+			opacity: 0.7;
+		}
+
+		#chrono-number {
+			position: absolute;
+			top: 60%;
+			left: 50%;
+			transform: translateX(-50%);
+			font-family: Arial, sans-serif;
+			font-size: 16px;
+			color: black;
+		}
+
+		.controls {
+			text-align: center;
+			margin-top: 10px;
+		}
+
+		button {
+			margin: 5px;
+			padding: 10px 20px;
+			font-size: 16px;
+			cursor: pointer;
+			border: 1px solid #333;
+			border-radius: 5px;
+			background-color: #fff;
+			transition: background-color 0.2s;
+		}
+
+		button:hover {
+			background-color: #e0e0e0;
+		}
+	</style>
+</head>
+
+<body>
+	<div class="chronometer">
+		<div id="chrono-hand"
+			class="hand"></div>
+		<div id="chrono-number"></div>
+	</div>
+	<div class="controls">
+		<button onclick="handleStartStop()">Start/Stop</button>
+		<button onclick="handleLap()">Lap</button>
+		<button onclick="handleReset()">Reset</button>
+	</div>
+	<script>
+		let isChronoRunning = false;
+		let chronoSeconds = 0;
+		let chronoInterval;
+		let lapHandDegreesList = [];
+
+		// DOM elements
+		const chronoHand = document.querySelector('#chrono-hand');
+		const chronoNumber = document.querySelector('#chrono-number');
+		const chronometerContainer = document.querySelector('.chronometer');
+
+		function handleStartStop() {
+			if (isChronoRunning) {
+				// Stop the chronometer
+				clearInterval(chronoInterval);
+				isChronoRunning = false;
+			} else {
+				// Start the chronometer
+				const startTime = Date.now() - (chronoSeconds * 1000);
+				chronoInterval = setInterval(() => {
+					chronoSeconds = (Date.now() - startTime) / 1000;
+					const chronoDegrees = ((chronoSeconds % 60) / 60) * 360;
+					chronoHand.style.transform = `translate(-50%, -100%) rotate(${chronoDegrees}deg)`;
+					chronoNumber.textContent = formatSeconds(chronoSeconds);
+				}, 50);
+				isChronoRunning = true;
+			}
+		}
+
+		function handleLap() {
+			if (isChronoRunning) {
+				// Record the current position as a lap
+				const lapDegrees = ((chronoSeconds % 60) / 60) * 360;
+				lapHandDegreesList.push(lapDegrees);
+
+				// Create a new lap hand element
+				const lapHand = document.createElement('div');
+				lapHand.className = 'hand lap-hand';
+				lapHand.style.transform = `translate(-50%, -100%) rotate(${lapDegrees}deg)`;
+				lapHand.style.display = 'block';
+				chronometerContainer.appendChild(lapHand);
+			}
+		}
+
+		function handleReset() {
+			clearInterval(chronoInterval);
+			isChronoRunning = false;
+			chronoSeconds = 0;
+			chronoNumber.textContent = '';
+			chronoHand.style.transform = 'translate(-50%, -100%) rotate(0deg)';
+			// Remove all lap hands and clear the list
+			document.querySelectorAll('.lap-hand').forEach(hand => hand.remove());
+			lapHandDegreesList = [];
+		}
+
+		function formatSeconds(seconds) {
+			return Math.floor(seconds).toString().padStart(2, '0') + '.' + Math.floor((seconds % 1) * 100).toString().padStart(2, '0');
+		}
+	</script>
+</body>
+
+</html>

@@ -3,7 +3,8 @@
 
 <head>
 	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="viewport"
+		content="width=device-width, initial-scale=1.0">
 	<title>Braun-Style Analog Watch</title>
 	<script src="https://cdn.tailwindcss.com"></script>
 	<script>
@@ -19,7 +20,8 @@
 		};
 		*/
 	</script>
-	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap"
+		rel="stylesheet">
 	<style>
 		:root {
 			--bg-color-light: #f0f0f0;
@@ -275,17 +277,44 @@
 
 <body class="light-mode flex items-center justify-center min-h-screen">
 	<div class="absolute top-4 left-4 z-50">
-		<button id="menu-button" class="p-2 rounded-md bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-gray-200">
-			<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+		<button id="menu-button"
+			class="p-2 rounded-md bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-gray-200">
+			<svg class="w-6 h-6"
+				fill="none"
+				stroke="currentColor"
+				viewBox="0 0 24 24"
+				xmlns="http://www.w3.org/2000/svg">
+				<path stroke-linecap="round"
+					stroke-linejoin="round"
+					stroke-width="2"
+					d="M4 6h16M4 12h16M4 18h16"></path>
 			</svg>
 		</button>
-		<div id="menu" class="hidden absolute top-12 left-0 bg-white dark:bg-gray-900 rounded-md shadow-lg p-2 w-48">
-			<a href="index.html" class="block px-4 py-2 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md" title="The main watch face.">Home</a>
-			<a href="demos/grok-calculator.html" class="block px-4 py-2 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md" title="A calculator interface created by Grok.">Grok Calculator</a>
-			<a href="demos/grok-clock.html" class="block px-4 py-2 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md" title="A clock face created by Grok.">Grok Clock</a>
-			<a href="demos/qwen-munich.html" class="block px-4 py-2 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md" title="A Munich-style clock by Qwen.">Qwen Munich</a>
-			<a href="demos/qwen-watch.html" class="block px-4 py-2 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md" title="A watch face by Qwen.">Qwen Watch</a>
+		<div id="menu"
+			class="hidden absolute top-12 left-0 bg-white dark:bg-gray-900 rounded-md shadow-lg p-2 w-48">
+			<a href="index.html"
+				class="block px-4 py-2 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md"
+				title="The main watch face.">Home</a>
+			<a href="demos/chrono-demo.html"
+				class="block px-4 py-2 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md"
+				title="A lap timer created by Grok.">Grok
+				Lap timer</a>
+			<a href="demos/grok-calculator.html"
+				class="block px-4 py-2 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md"
+				title="A calculator interface created by Grok.">Grok
+				Calculator</a>
+			<a href="demos/grok-clock.html"
+				class="block px-4 py-2 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md"
+				title="A clock face created by Grok.">Grok
+				Clock</a>
+			<a href="demos/qwen-munich.html"
+				class="block px-4 py-2 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md"
+				title="A Munich-style clock by Qwen.">Qwen
+				Munich</a>
+			<a href="demos/qwen-watch.html"
+				class="block px-4 py-2 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md"
+				title="A watch face by Qwen.">Qwen
+				Watch</a>
 		</div>
 	</div>
 	<script>
@@ -296,16 +325,20 @@
 			menu.classList.toggle('hidden');
 		});
 	</script>
-	<div id="watch" class="watch relative rounded-full flex items-center justify-center">
+	<div id="watch"
+		class="watch relative rounded-full flex items-center justify-center">
 		<div class="watch-face absolute w-full h-full rounded-full border-8 border-gray-300 dark:border-gray-700">
 			<!-- Markers -->
 			<div class="markers-container absolute w-full h-full z-0"></div>
 			<!-- Numbers -->
 			<div class="numbers-container absolute w-full h-full z-1"></div>
 			<!-- Button Labels -->
-			<div id="label-ss" class="button-label">Start/Stop</div>
-			<div id="label-rst" class="button-label">Reset</div>
-			<div id="label-mode" class="button-label">Mode</div>
+			<div id="label-ss"
+				class="button-label">Start/Stop</div>
+			<div id="label-rst"
+				class="button-label">Reset</div>
+			<div id="label-mode"
+				class="button-label">Mode</div>
 			<!-- Hands -->
 			<div class="hand hour-hand"></div>
 			<div class="hand minute-hand"></div>
@@ -314,18 +347,25 @@
 			<!-- Date Display -->
 			<div class="date-display absolute left-[120px] top-[210px] -mt-3 text-sm font-semibold text-center"></div>
 			<!-- Digital Display -->
-			<div class="digital-display absolute left-[50px] top-[150px] -mt-3 text-sm bg-red-600 text-white p-1 rounded">time</div>
+			<div class="digital-display absolute left-[40px] top-[150px] -mt-3 text-sm bg-red-600 text-white p-1 rounded"
+				style="width: 70px; text-align: center;">
+				time</div>
 			<!-- Chronometer -->
 			<div class="chrono-dial absolute left-1/2 -ml-10 rounded-full flex items-center justify-center">
 				<div class="hand chrono-hand w-0.5 h-[30px] bg-red-600"></div>
 				<div class="absolute w-2 h-2 bg-red-600 rounded-full top-1/2 left-1/2 -mt-1 -ml-1 z-10"></div>
 			</div>
-			<div class="chrono-number absolute w-0.9 h-0.5 top-[107px] left-[123px] -mt-0.25 -ml-0.25 z-10 text-sm text-center">123 sec</div>
+			<div
+				class="chrono-number absolute w-0.9 h-0.5 top-[107px] left-[123px] -mt-0.25 -ml-0.25 z-10 text-sm text-center">
+				123 sec</div>
 		</div>
 		<!-- Buttons -->
-		<button id="start-stop-button" class="watch-button"></button>
-		<button id="reset-button" class="watch-button"></button>
-		<button id="mode-toggle" class="watch-button"></button>
+		<button id="start-stop-button"
+			class="watch-button"></button>
+		<button id="reset-button"
+			class="watch-button"></button>
+		<button id="mode-toggle"
+			class="watch-button"></button>
 	</div>
 	<script>
 		// --- DOM Elements ---
@@ -433,18 +473,19 @@
 			}
 		}
 
-		function formatSeconds(seconds) {
-			const minutes = Math.floor(seconds / 60).toString().padStart(2, '0');
-			const wholeSeconds = Math.floor(seconds % 60).toString().padStart(2, '0');
-			const secondFraction = (seconds % 1).toFixed(2).slice(2).padStart(2, '0');
-			return `${minutes}:${wholeSeconds}:${secondFraction}`;
-		}
 		function handleReset() {
 			clearInterval(chronoInterval);
 			isChronoRunning = false;
 			chronoSeconds = 0;
 			chronoNumber.textContent = '';
 			chronoHand.style.transform = 'translate(-50%, -100%) rotate(0deg)';
+		}
+
+		function formatSeconds(seconds) {
+			const minutes = Math.floor(seconds / 60).toString().padStart(2, '0');
+			const wholeSeconds = Math.floor(seconds % 60).toString().padStart(2, '0');
+			const secondFraction = (seconds % 1).toFixed(2).slice(2).padStart(2, '0');
+			return `${minutes}:${wholeSeconds}:${secondFraction}`;
 		}
 
 		// --- Mode Toggle ---
