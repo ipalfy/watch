@@ -296,9 +296,10 @@
 			</svg>
 		</button>
 		<div id="menu" class="hidden absolute top-12 left-0 bg-white dark:bg-gray-900 rounded-md shadow-lg p-2 w-48">
-			<a href="index.html"
+			<a href="demos/grok-sunclock.html"
 				class="block px-4 py-2 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md"
-				title="The main watch face.">Home</a>
+				title="Sun status by Grok.">Grok
+				sun status</a>
 			<a href="demos/chrono-demo.html"
 				class="block px-4 py-2 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md"
 				title="A lap timer created by Grok.">Grok
@@ -520,8 +521,14 @@
 			if (isChronoRunning) {
 				clearInterval(chronoInterval);
 				isChronoRunning = false;
+				localStorage.setItem('chrono-running', 'false');
+				localStorage.setItem('chrono-seconds', chronoSeconds);
+				localStorage.removeItem('chrono-startTime');
 			} else {
 				const startTime = Date.now() - (chronoSeconds * 1000);
+				localStorage.setItem('chrono-startTime', startTime);
+				localStorage.setItem('chrono-running', 'true');
+				localStorage.removeItem('chrono-seconds');
 				chronoInterval = setInterval(() => {
 					chronoSeconds = (Date.now() - startTime) / 1000;
 					const chronoDegrees = ((chronoSeconds % 60) / 60) * 360;
@@ -542,6 +549,9 @@
 			chronoHand.style.transform = 'translate(-50%, -100%) rotate(0deg)';
 			document.getElementById('label-stop').classList.remove('active');
 			document.getElementById('label-start').classList.add('active');
+			localStorage.removeItem('chrono-running');
+			localStorage.removeItem('chrono-seconds');
+			localStorage.removeItem('chrono-startTime');
 		}
 
 		function formatSeconds(seconds) {
@@ -563,6 +573,7 @@
 
 		function toggleTimeMode() {
 			is24HourMode = !is24HourMode;
+			localStorage.setItem('watch-time-mode', is24HourMode ? '24h' : '12h');
 			document.getElementById('label-24h').classList.toggle('active', is24HourMode);
 			document.getElementById('label-12h').classList.toggle('active', !is24HourMode);
 
@@ -579,7 +590,7 @@
 			setDate();
 		}
 
-		// --- Load Theme Preference ---
+		// --- Load Preferences ---
 		function loadTheme() {
 			const savedTheme = localStorage.getItem('watch-theme');
 			const isDarkMode = savedTheme === 'dark';
@@ -589,6 +600,31 @@
 			document.getElementById('label-light').classList.toggle('active', !isDarkMode);
 		}
 
+		function loadTimeMode() {
+			const savedTimeMode = localStorage.getItem('watch-time-mode');
+			is24HourMode = savedTimeMode === '24h';
+			document.getElementById('label-24h').classList.toggle('active', is24HourMode);
+			document.getElementById('label-12h').classList.toggle('active', !is24HourMode);
+		}
+
+		function loadChronoState() {
+			const wasRunning = localStorage.getItem('chrono-running') === 'true';
+			if (wasRunning) {
+				const startTime = parseInt(localStorage.getItem('chrono-startTime'), 10);
+				if (startTime) {
+					chronoSeconds = (Date.now() - startTime) / 1000;
+					handleStartStop();
+				}
+			} else {
+				chronoSeconds = parseFloat(localStorage.getItem('chrono-seconds')) || 0;
+				if (chronoSeconds > 0) {
+					const chronoDegrees = ((chronoSeconds % 60) / 60) * 360;
+					chronoHand.style.transform = `translate(-50%, -100%) rotate(${chronoDegrees}deg)`;
+					chronoNumber.textContent = formatSeconds(chronoSeconds);
+				}
+			}
+		}
+
 		// --- Event Listeners ---
 		startStopButton.addEventListener('click', handleStartStop);
 		resetButton.addEventListener('click', handleReset);
@@ -596,14 +632,14 @@
 		timeModeButton.addEventListener('click', toggleTimeMode);
 
 		// --- Initialization ---
-		document.getElementById('label-12h').classList.add('active');
 		document.getElementById('label-start').classList.add('active');
+		loadTheme();
+		loadTimeMode();
 		createMarkers();
 		createHourNumbers();
 		setDate();
 		setInterval(setDate, 1000);
-		handleReset();
-		loadTheme();
+		loadChronoState();
 
 	</script>
 </body>

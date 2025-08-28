@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Braun-Inspired Sunrise-Sunset Clock</title>
+	<style>
+		body {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			min-height: 100vh;
+			margin: 0;
+			font-family: 'Helvetica Neue', Arial, sans-serif;
+			/* Braun-inspired font */
+			background: transparent;
+			/* No body background */
+			color: #000;
+		}
+
+		.clock-container {
+			position: relative;
+			width: min(80vw, 350px);
+			/* Responsive size, max 350px */
+			aspect-ratio: 1/1;
+			/* Force perfect circle */
+			border: 2px solid #000;
+			/* Thin black bezel */
+			border-radius: 50%;
+			/* Ensure round shape */
+			background: #ffffff;
+			/* White watch face */
+			overflow: hidden;
+			/* Prevent any square overflow */
+		}
+
+		.clock-face {
+			position: relative;
+			width: 100%;
+			height: 100%;
+		}
+
+		.hand {
+			position: absolute;
+			bottom: 50%;
+			left: 50%;
+			transform-origin: bottom;
+			background: #000;
+			/* Black hands for Braun aesthetic */
+			border-radius: 4px;
+		}
+
+		.hour-hand {
+			width: 2.5%;
+			/* Thicker, Braun-style */
+			height: 28%;
+			background: #e60000;
+		}
+
+		.minute-hand {
+			width: 1.8%;
+			/* Thicker, Braun-style */
+			height: 38%;
+		}
+
+		.second-hand {
+			width: 1%;
+			/* Slightly thicker but still slim */
+			height: 45%;
+			background: #fdd835;
+			/* Braun yellow */
+		}
+
+		.number {
+			position: absolute;
+			width: 100%;
+			height: 100%;
+			text-align: center;
+			font-size: clamp(12px, 3vw, 14px);
+			/* Responsive font size */
+			font-weight: 600;
+			color: #000;
+			pointer-events: none;
+			/* Prevent overlap issues */
+		}
+
+		.number div {
+			position: absolute;
+			width: 100%;
+			top: 5%;
+			/* Numbers close to markers */
+		}
+
+		.marker {
+			position: absolute;
+			width: 100%;
+			height: 100%;
+			pointer-events: none;
+		}
+
+		.marker div {
+			position: absolute;
+			width: 2px;
+			height: 10px;
+			/* Slightly longer for edge placement */
+			background: #000;
+			left: 50%;
+			top: 1%;
+			/* Markers at very edge */
+			transform: translateX(-50%);
+		}
+
+		.digital-display {
+			position: absolute;
+			top: 20%;
+			/* Lower position */
+			left: 50%;
+			transform: translateX(-50%);
+			font-size: clamp(14px, 4vw, 18px);
+			/* Increased size */
+			font-weight: 400;
+			color: #000;
+			background: #f0f0f0;
+			/* Light gray for contrast */
+			padding: 6px 10px;
+			border-radius: 3px;
+			pointer-events: none;
+			line-height: 1.3;
+			text-align: center;
+		}
+
+		.sun-display {
+			position: absolute;
+			top: 70%;
+			left: 50%;
+			transform: translateX(-50%);
+			font-size: clamp(10px, 2.5vw, 12px);
+			font-weight: 400;
+			color: #000;
+			background: #f0f0f0;
+			padding: 4px 8px;
+			border-radius: 3px;
+			pointer-events: none;
+			text-align: center;
+		}
+
+		.error {
+			color: #e60000;
+			font-size: clamp(14px, 3.5vw, 16px);
+			margin-top: 0.5rem;
+			max-width: 90%;
+			text-align: center;
+		}
+
+		.center-dot {
+			position: absolute;
+			width: 15px;
+			height: 15px;
+			background:  #fdd835;
+			border-radius: 50%;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -50%);
+		}
+	</style>
+</head>
+
+<body>
+	<div class="clock-container">
+		<div class="clock-face" id="clock-face">
+			<!-- Digital display -->
+			<div class="digital-display" id="digital-display"></div>
+			<!-- Sun display -->
+			<div class="sun-display" id="sun-display"></div>
+			<!-- Clock hands -->
+			<div class="hand hour-hand"></div>
+			<div class="hand minute-hand"></div>
+			<div class="hand second-hand"></div>
+			<!-- Center dot -->
+			<div class="center-dot"></div>
+		</div>
+	</div>
+	<p class="error" id="error"></p>
+
+	<script>
+		// State variables
+		let sunriseForDisplay, sunsetForDisplay, locationName;
+		let sunriseForCalc, sunsetForCalc;
+
+
+		// Generate hour numbers and markers dynamically
+		function generateHourMarkers() {
+			const clockFace = document.getElementById('clock-face');
+			for (let i = 0; i < 24; i++) {
+				const hour = (12 + i) % 24; // Start at 12, go to 0 at bottom
+				const angle = i * 15; // 360 / 24 = 15 degrees per hour
+
+				// Create number
+				const numberDiv = document.createElement('div');
+				numberDiv.className = 'number';
+				numberDiv.style.transform = `rotate(${angle}deg)`;
+				const numberInner = document.createElement('div');
+				numberInner.style.transform = `rotate(-${angle}deg)`;
+				numberInner.textContent = hour;
+				numberDiv.appendChild(numberInner);
+				clockFace.appendChild(numberDiv);
+
+				// Create marker
+				const markerDiv = document.createElement('div');
+				markerDiv.className = 'marker';
+				markerDiv.style.transform = `rotate(${angle}deg)`;
+				const markerInner = document.createElement('div');
+				markerDiv.appendChild(markerInner);
+				clockFace.appendChild(markerDiv);
+			}
+		}
+
+		function normalizeDeg(deg) {
+			return (deg % 360 + 360) % 360;
+		}
+
+		// Function to convert time string (HH:MM:SS) to degrees for 24-hour clock with adjustment
+		function timeToDegrees(timeStr) {
+			const [hours, minutes, seconds] = timeStr.split(':').map(Number);
+			return (hours * 15 + (minutes / 60) * 15) - 180; // 12 at top
+		}
+
+		// Function to convert time string (HH:MM:SS) to seconds
+		function timeToSeconds(timeStr) {
+			const [hours, minutes, seconds] = timeStr.split(':').map(Number);
+			return hours * 3600 + minutes * 60 + seconds;
+		}
+
+		// Function to calculate time one hour after sunset
+		function timePlusOneHour(timeStr) {
+			const seconds = timeToSeconds(timeStr) + 3600; // Add 1 hour
+			const hours = Math.floor(seconds / 3600) % 24;
+			const minutes = Math.floor((seconds % 3600) / 60);
+			const secs = seconds % 60;
+			return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+		}
+
+		// Function to update digital display
+		function updateDigitalDisplay() {
+			const now = new Date();
+			const timeStr = now.toLocaleTimeString(navigator.language, {
+				hour12: false,
+				hour: '2-digit',
+				minute: '2-digit',
+				second: '2-digit'
+			});
+			const weekdayStr = now.toLocaleDateString(navigator.language, { weekday: 'long' });
+			const dayStr = now.toLocaleDateString(navigator.language, { day: 'numeric' });
+			const monthStr = now.toLocaleDateString(navigator.language, { month: 'long' });
+
+			document.getElementById('digital-display').innerHTML = `${timeStr}<br>${weekdayStr}<br>${dayStr}. ${monthStr}`;
+		}
+
+		// Function to update the sun data display
+		function updateSunDisplay() {
+			const sunDisplay = document.getElementById('sun-display');
+			if (sunriseForDisplay && sunsetForDisplay && locationName) {
+				sunDisplay.innerHTML = `Sun: ${sunriseForDisplay} to ${sunsetForDisplay}<br>in ${locationName}`;
+			} else {
+				sunDisplay.textContent = 'Loading sun data...';
+			}
+		}
+
+		// Function to update the clock
+		function updateClock() {
+			const now = new Date();
+			const hours = now.getHours();
+			const minutes = now.getMinutes();
+			const seconds = now.getSeconds();
+
+			// Calculate rotations for clock hands with adjustment for 12 at top
+			const hourDeg = (hours * 15 + (minutes / 60) * 15) - 180; // Correct 24-hour display
+			const minuteDeg = minutes * 6;
+			const secondDeg = seconds * 6;
+
+			document.querySelector('.hour-hand').style.transform = `rotate(${hourDeg}deg)`;
+			document.querySelector('.minute-hand').style.transform = `rotate(${minuteDeg}deg)`;
+			document.querySelector('.second-hand').style.transform = `rotate(${secondDeg}deg)`;
+
+			// Update digital display
+			updateDigitalDisplay();
+		}
+
+		// Function to update sunrise and sunset markers (now just gradient)
+		function updateSunMarkers(sunriseTime, sunsetTime) {
+			const sunriseDeg = timeToDegrees(sunriseTime);
+			const sunsetDeg = timeToDegrees(sunsetTime);
+			updateClockFaceGradient(sunriseDeg, sunsetDeg, sunriseTime, sunsetTime);
+		}
+
+		// Function to update clock face with conic gradient for night/day
+		function updateClockFaceGradient(sunriseDeg, sunsetDeg, sunriseTime, sunsetTime) {
+			const sunriseNorm = normalizeDeg(sunriseDeg);
+			const sunsetNorm = normalizeDeg(sunsetDeg);
+			const darkTime = timePlusOneHour(sunsetTime);
+			const darkDeg = timeToDegrees(darkTime);
+			const darkNorm = normalizeDeg(darkDeg);
+
+			// Calculate night duration clockwise from sunset to sunrise
+			let nightDurDeg = normalizeDeg(sunriseNorm - sunsetNorm);
+			if (nightDurDeg === 0) nightDurDeg = 360; // Handle edge cases
+
+			// Calculate degrees to dark point (1 hour after sunset)
+			let darkPointDeg = normalizeDeg(darkNorm - sunsetNorm);
+			if (darkPointDeg > nightDurDeg) darkPointDeg = 15; // Approx 1 hour if overflow
+
+			// Colors for gradient
+			const dayColor = '#ffffff'; // White watch face
+			const nightEdgeColor = '#f5f5f5'; // Almost white at sunset/sunrise
+			const nightDarkColor = '#808080'; // Medium gray for full darkness
+
+			// Conic gradient: sunset -> dark (1hr) -> sunrise -> day
+			const gradient =
+				`conic-gradient(from ${sunsetNorm}deg, ${nightEdgeColor} 0deg, ${nightDarkColor} ${darkPointDeg}deg, ${nightDarkColor} ${nightDurDeg - 15}deg, ${nightEdgeColor} ${nightDurDeg}deg, ${dayColor} ${nightDurDeg}deg, ${dayColor} 360deg)`;
+			document.querySelector('.clock-face').style.backgroundImage = gradient;
+		}
+
+		// Function to fetch sunrise and sunset data
+		async function fetchSunData(lat, lng) {
+			try {
+				const response = await fetch(`https://api.sunrise-sunset.org/json?lat=${lat}&lng=${lng}&formatted=0`);
+				const data = await response.json();
+				if (data.status === 'OK') {
+					const sunriseDate = new Date(data.results.sunrise);
+					const sunsetDate = new Date(data.results.sunset);
+
+					sunriseForDisplay = sunriseDate.toLocaleTimeString(navigator.language, {
+						hour: '2-digit',
+						minute: '2-digit',
+						hour12: false
+					});
+					sunsetForDisplay = sunsetDate.toLocaleTimeString(navigator.language, {
+						hour: '2-digit',
+						minute: '2-digit',
+						hour12: false
+					});
+
+					sunriseForCalc = sunriseDate.toLocaleTimeString('en-GB');
+					sunsetForCalc = sunsetDate.toLocaleTimeString('en-GB');
+
+
+					updateSunDisplay();
+					updateSunMarkers(sunriseForCalc, sunsetForCalc);
+				} else {
+					throw new Error('API error');
+				}
+			} catch (error) {
+				document.getElementById('error').textContent = 'Failed to fetch sunrise/sunset data.';
+				console.error(error);
+			}
+		}
+
+		// Fallback function using IP geolocation
+		async function getFallbackLocation() {
+			try {
+				const response = await fetch('https://ipapi.co/json/');
+				const data = await response.json();
+				if (data.error) {
+					throw new Error('IP API error');
+				}
+				const lat = data.latitude;
+				const lng = data.longitude;
+				locationName = `${data.city}, ${data.country_code}`;
+				updateSunDisplay();
+				fetchSunData(lat, lng);
+			} catch (error) {
+				// Ultimate default to Munich
+				locationName = 'Munich, DE';
+				updateSunDisplay();
+				fetchSunData(48.1374, 11.5755);
+			}
+		}
+
+		// Function to get geolocation
+		function getLocation() {
+			if (navigator.geolocation) {
+				navigator.geolocation.getCurrentPosition(
+					(position) => {
+						const lat = position.coords.latitude;
+						const lng = position.coords.longitude;
+						locationName = `Lat ${lat.toFixed(2)}, Lng ${lng.toFixed(2)}`;
+						updateSunDisplay();
+						fetchSunData(lat, lng);
+					},
+					(error) => {
+						document.getElementById('error').textContent = 'Geolocation denied. Using fallback.';
+						getFallbackLocation();
+					}
+				);
+			} else {
+				document.getElementById('error').textContent = 'Geolocation not supported. Using fallback.';
+				getFallbackLocation();
+			}
+		}
+
+		// Initialize clock and fetch data
+		generateHourMarkers();
+		updateSunDisplay();
+		getLocation();
+		updateClock();
+		setInterval(updateClock, 1000);
+	</script>
+</body>
+
+</html>
