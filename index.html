@@ -281,6 +281,10 @@
 		.dark-mode .hour-number {
 			color: var(--text-color-dark);
 		}
+
+		.button-label .active {
+			color: #d32f2f; /* Braun red */
+		}
 	</style>
 </head>
 
@@ -336,10 +340,10 @@
 			<div class="numbers-container absolute w-full h-full z-1"></div>
 
 			<!-- Button Labels -->
-			<div id="label-ss" class="button-label">Start/Stop</div>
+			<div id="label-ss" class="button-label"><span id="label-start" class="active">Start</span> | <span id="label-stop">Stop</span></div>
 			<div id="label-rst" class="button-label">Reset</div>
-			<div id="label-mode" class="button-label">Mode</div>
-			<div id="label-time-mode" class="button-label">12/24</div>
+			<div id="label-mode" class="button-label"><span id="label-light" class="active">Light</span> | <span id="label-dark">Dark</span></div>
+			<div id="label-time-mode" class="button-label"><span id="label-12h" class="active">12h</span> | <span id="label-24h">24h</span></div>
 
 			<!-- Hands -->
 			<div class="hand hour-hand"></div>
@@ -434,7 +438,7 @@
 		function createHourNumbers() {
 			const hours = is24HourMode ? 24 : 12;
 			const step = 360 / hours;
-			const radius = is24HourMode ? 120 : 125;
+			const radius = is24HourMode ? 130 : 125; // Reverted 12h radius
 			const fontSize = is24HourMode ? '14px' : '20px';
 
 			// Create a fragment to batch DOM insertions
@@ -445,7 +449,12 @@
 				let numberEl = numbersContainer.querySelector(`.hour-number-${i}`);
 
 				if (i <= hours) {
-					const angle = i * step * (Math.PI / 180);
+					let angle;
+					if (is24HourMode) {
+						angle = (i * step - 180) * (Math.PI / 180);
+					} else {
+						angle = i * step * (Math.PI / 180); // Original 12h angle
+					}
 					const x = Math.sin(angle) * radius;
 					const y = -Math.cos(angle) * radius;
 
@@ -491,7 +500,7 @@
 			const hours = now.getHours();
 			let hoursDegrees;
 			if (is24HourMode) {
-				hoursDegrees = (hours / 24) * 360 + (minutes / 60) * 15;
+				hoursDegrees = (hours / 24) * 360 + (minutes / 60) * 15 - 180;
 			} else {
 				hoursDegrees = (hours / 12) * 360 + (minutes / 60) * 30;
 			}
@@ -521,6 +530,8 @@
 				}, 50);
 				isChronoRunning = true;
 			}
+			document.getElementById('label-stop').classList.toggle('active', isChronoRunning);
+			document.getElementById('label-start').classList.toggle('active', !isChronoRunning);
 		}
 
 		function handleReset() {
@@ -529,6 +540,8 @@
 			chronoSeconds = 0;
 			chronoNumber.textContent = '';
 			chronoHand.style.transform = 'translate(-50%, -100%) rotate(0deg)';
+			document.getElementById('label-stop').classList.remove('active');
+			document.getElementById('label-start').classList.add('active');
 		}
 
 		function formatSeconds(seconds) {
@@ -542,11 +555,16 @@
 		function toggleMode() {
 			body.classList.toggle('dark-mode');
 			body.classList.toggle('light-mode');
-			localStorage.setItem('watch-theme', body.classList.contains('dark-mode') ? 'dark' : 'light');
+			const isDarkMode = body.classList.contains('dark-mode');
+			document.getElementById('label-dark').classList.toggle('active', isDarkMode);
+			document.getElementById('label-light').classList.toggle('active', !isDarkMode);
+			localStorage.setItem('watch-theme', isDarkMode ? 'dark' : 'light');
 		}
 
 		function toggleTimeMode() {
 			is24HourMode = !is24HourMode;
+			document.getElementById('label-24h').classList.toggle('active', is24HourMode);
+			document.getElementById('label-12h').classList.toggle('active', !is24HourMode);
 
 			// Animate markers
 			markersContainer.style.transition = 'opacity 0.25s ease-out';
@@ -564,13 +582,11 @@
 		// --- Load Theme Preference ---
 		function loadTheme() {
 			const savedTheme = localStorage.getItem('watch-theme');
-			if (savedTheme === 'dark') {
-				body.classList.add('dark-mode');
-				body.classList.remove('light-mode');
-			} else {
-				body.classList.add('light-mode');
-				body.classList.remove('dark-mode');
-			}
+			const isDarkMode = savedTheme === 'dark';
+			body.classList.toggle('dark-mode', isDarkMode);
+			body.classList.toggle('light-mode', !isDarkMode);
+			document.getElementById('label-dark').classList.toggle('active', isDarkMode);
+			document.getElementById('label-light').classList.toggle('active', !isDarkMode);
 		}
 
 		// --- Event Listeners ---
@@ -580,6 +596,8 @@
 		timeModeButton.addEventListener('click', toggleTimeMode);
 
 		// --- Initialization ---
+		document.getElementById('label-12h').classList.add('active');
+		document.getElementById('label-start').classList.add('active');
 		createMarkers();
 		createHourNumbers();
 		setDate();
