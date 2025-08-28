@@ -123,7 +123,7 @@
 			width: 6px;
 			height: 65px;
 			background-color: var(--hand-hour-light);
-			transition: background-color 0.3s ease;
+			transition: background-color 0.3s ease, transform 0.5s ease-in-out;
 		}
 
 		.dark-mode .hour-hand {
@@ -134,7 +134,7 @@
 			width: 4px;
 			height: 100px;
 			background-color: var(--hand-minute-light);
-			transition: background-color 0.3s ease;
+			transition: background-color 0.3s ease, transform 0.5s ease-in-out;
 		}
 
 		.dark-mode .minute-hand {
@@ -275,7 +275,7 @@
 			font-size: 20px;
 			font-weight: 500;
 			color: var(--text-color-light);
-			transition: color 0.3s ease;
+			transition: color 0.3s ease, transform 0.5s ease-in-out, font-size 0.5s ease-in-out, opacity 0.5s ease-in-out;
 		}
 
 		.dark-mode .hour-number {
@@ -432,25 +432,48 @@
 
 		// --- Create Hour Numbers ---
 		function createHourNumbers() {
-			numbersContainer.innerHTML = '';
 			const hours = is24HourMode ? 24 : 12;
 			const step = 360 / hours;
 			const radius = is24HourMode ? 120 : 125;
+			const fontSize = is24HourMode ? '14px' : '20px';
 
-			for (let i = 1; i <= hours; i++) {
-				const angle = i * step * (Math.PI / 180); // angle in radians
-				const x = Math.sin(angle) * radius;
-				const y = -Math.cos(angle) * radius;
+			// Create a fragment to batch DOM insertions
+			const fragment = document.createDocumentFragment();
 
-				const numberEl = document.createElement('div');
-				numberEl.classList.add('hour-number');
-				numberEl.textContent = i;
-				if (is24HourMode) {
-					numberEl.style.fontSize = '14px';
+			// Animate existing numbers and add new ones
+			for (let i = 1; i <= 24; i++) {
+				let numberEl = numbersContainer.querySelector(`.hour-number-${i}`);
+
+				if (i <= hours) {
+					const angle = i * step * (Math.PI / 180);
+					const x = Math.sin(angle) * radius;
+					const y = -Math.cos(angle) * radius;
+
+					if (!numberEl) {
+						numberEl = document.createElement('div');
+						numberEl.classList.add('hour-number', `hour-number-${i}`);
+						numberEl.textContent = i;
+						numberEl.style.opacity = '0'; // Start transparent
+						fragment.appendChild(numberEl);
+					}
+
+					// Use a timeout to apply transition-triggering styles after element is in DOM
+					setTimeout(() => {
+						numberEl.style.fontSize = fontSize;
+						numberEl.style.transform = `translate(${x}px, ${y}px)`;
+						numberEl.style.opacity = '1';
+					}, 10);
+
+				} else {
+					if (numberEl) {
+						numberEl.style.opacity = '0';
+						setTimeout(() => {
+							numberEl.remove();
+						}, 500); // Remove after fade out
+					}
 				}
-				numberEl.style.transform = `translate(${x}px, ${y}px)`;
-				numbersContainer.appendChild(numberEl);
 			}
+			numbersContainer.appendChild(fragment);
 		}
 
 		// --- Update Clock and Date ---
@@ -524,7 +547,16 @@
 
 		function toggleTimeMode() {
 			is24HourMode = !is24HourMode;
-			createMarkers();
+
+			// Animate markers
+			markersContainer.style.transition = 'opacity 0.25s ease-out';
+			markersContainer.style.opacity = '0';
+			setTimeout(() => {
+				createMarkers();
+				markersContainer.style.transition = 'opacity 0.25s ease-in';
+				markersContainer.style.opacity = '1';
+			}, 250);
+
 			createHourNumbers();
 			setDate();
 		}
