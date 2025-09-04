@@ -78,7 +78,25 @@
 
 		.watch-face {
 			background-color: var(--watch-face-light);
-			transition: background-color 0.3s ease, background-image 0.5s ease-in-out;
+			transition: background-color 0.3s ease;
+			position: relative;
+		}
+
+		.watch-face::before {
+			content: '';
+			position: absolute;
+			top: 0;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			border-radius: 50%;
+			background-image: var(--sun-moon-gradient);
+			opacity: 0;
+			transition: opacity 0.5s ease-in-out;
+		}
+
+		.watch-face.sun-moon-active::before {
+			opacity: 1;
 		}
 
 		.dark-mode .watch-face {
@@ -607,8 +625,9 @@
 		}
 
 		function updateWatchFaceGradient() {
-			if (!sunMoonData || !symbolsVisible) {
-				document.querySelector('.watch-face').style.backgroundImage = '';
+			const watchFace = document.querySelector('.watch-face');
+			if (!sunMoonData) {
+				watchFace.style.setProperty('--sun-moon-gradient', 'none');
 				return;
 			}
 
@@ -627,7 +646,7 @@
 			if (nightDurDeg === 0) nightDurDeg = 360;
 
 			const gradient = `conic-gradient(from ${sunsetNorm}deg, ${nightEdgeColor} 0deg, ${nightDarkColor} 15deg, ${nightDarkColor} ${nightDurDeg - 15}deg, ${nightEdgeColor} ${nightDurDeg}deg, ${dayColor} ${nightDurDeg}deg, ${dayColor} 360deg)`;
-			document.querySelector('.watch-face').style.backgroundImage = gradient;
+			watchFace.style.setProperty('--sun-moon-gradient', gradient);
 		}
 
 		function timeToDegrees(date) {
@@ -746,10 +765,11 @@
 						getLocation();
 					}
 					container.style.display = 'block';
+					document.querySelector('.watch-face').classList.add('sun-moon-active');
 				}
 			} else { // Deactivating
 				document.getElementById('sun-moon-symbols').style.display = 'none';
-				document.querySelector('.watch-face').style.backgroundImage = '';
+				document.querySelector('.watch-face').classList.remove('sun-moon-active');
 				if (timeModeBeforeSunMoon === '12h') {
 					toggleTimeMode();
 					timeModeBeforeSunMoon = null;
@@ -772,9 +792,11 @@
 
 		function toggleTimeMode() {
 			is24HourMode = !is24HourMode;
+			const watchFace = document.querySelector('.watch-face');
+
 			if (!is24HourMode) {
 				document.getElementById('sun-moon-symbols').style.display = 'none';
-				document.querySelector('.watch-face').style.backgroundImage = '';
+				watchFace.classList.remove('sun-moon-active'); // Ensure gradient is off in 12h mode
 			} else {
 				if (symbolsVisible) {
 					document.getElementById('sun-moon-symbols').style.display = 'block';
@@ -784,6 +806,7 @@
 						createSunMoonSymbols(sunMoonData);
 						updateWatchFaceGradient();
 					}
+					watchFace.classList.add('sun-moon-active'); // Ensure gradient is on in 24h mode if symbols are visible
 				}
 			}
 			updateSunMoonLabel();
