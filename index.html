@@ -5,6 +5,7 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Braun-Style Analog Watch</title>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/suncalc.min.js"></script>
 	<script src="https://cdn.tailwindcss.com"></script>
 	<script>
 		/* This just for reference
@@ -77,7 +78,7 @@
 
 		.watch-face {
 			background-color: var(--watch-face-light);
-			transition: background-color 0.3s ease;
+			transition: background-color 0.3s ease, background-image 0.5s ease-in-out;
 		}
 
 		.dark-mode .watch-face {
@@ -283,7 +284,31 @@
 		}
 
 		.button-label .active {
-			color: #d32f2f; /* Braun red */
+			color: #d32f2f;
+			/* Braun red */
+		}
+
+		#sun-moon-toggle {
+			transform: translate(-160px, -70px) rotate(-59deg);
+		}
+
+		#label-sun-moon {
+			top: 100px;
+			left: 58px;
+			transform: rotate(30deg);
+		}
+
+		.sun-moon-symbol {
+			position: absolute;
+			width: 20px;
+			height: 20px;
+			top: 50%;
+			left: 50%;
+			margin: -10px 0 0 -10px;
+			text-align: center;
+			line-height: 20px;
+			font-size: 14px;
+			z-index: 15;
 		}
 	</style>
 </head>
@@ -291,7 +316,8 @@
 <body class="light-mode flex items-center justify-center min-h-screen">
 	<div class="absolute top-4 left-4 z-50">
 		<button id="menu-button" class="p-2 rounded-md bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-gray-200">
-			<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+			<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+				xmlns="http://www.w3.org/2000/svg">
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
 			</svg>
 		</button>
@@ -334,6 +360,9 @@
 
 		<div class="watch-face absolute w-full h-full rounded-full border-8 border-gray-300 dark:border-gray-700">
 
+			<!-- Sun/Moon Symbols -->
+			<div id="sun-moon-symbols" style="display: none;"></div>
+
 			<!-- Markers -->
 			<div class="markers-container absolute w-full h-full z-0"></div>
 
@@ -341,10 +370,17 @@
 			<div class="numbers-container absolute w-full h-full z-1"></div>
 
 			<!-- Button Labels -->
-			<div id="label-ss" class="button-label"><span id="label-start" class="active">Start</span> | <span id="label-stop">Stop</span></div>
+			<div id="label-ss" class="button-label">
+				<span id="label-start" class="active">Start</span> | <span id="label-stop">Stop</span>
+			</div>
 			<div id="label-rst" class="button-label">Reset</div>
-			<div id="label-mode" class="button-label"><span id="label-light" class="active">Light</span> | <span id="label-dark">Dark</span></div>
-			<div id="label-time-mode" class="button-label"><span id="label-12h" class="active">12h</span> | <span id="label-24h">24h</span></div>
+			<div id="label-mode" class="button-label">
+				<span id="label-light" class="active">Light</span> | <span id="label-dark">Dark</span>
+			</div>
+			<div id="label-time-mode" class="button-label">
+				<span id="label-12h" class="active">12h</span> | <span id="label-24h">24h</span>
+			</div>
+			<div id="label-sun-moon" class="button-label">Sun/Moon</div>
 
 			<!-- Hands -->
 			<div class="hand hour-hand"></div>
@@ -372,6 +408,7 @@
 			<button id="reset-button" class="watch-button"></button>
 			<button id="mode-toggle" class="watch-button"></button>
 			<button id="time-mode-button" class="watch-button"></button>
+			<button id="sun-moon-toggle" class="watch-button"></button>
 
 		</div>
 
@@ -393,12 +430,16 @@
 		const resetButton = document.getElementById('reset-button');
 		const modeToggleButton = document.getElementById('mode-toggle');
 		const timeModeButton = document.getElementById('time-mode-button');
+		const sunMoonToggleButton = document.getElementById('sun-moon-toggle');
 
 		// --- State ---
 		let chronoInterval = null;
 		let chronoSeconds = 0;
 		let isChronoRunning = false;
 		let is24HourMode = false;
+		let sunMoonData = null;
+		let symbolsVisible = false;
+		let timeModeBeforeSunMoon = null;
 
 		// --- Create Markers ---
 		function createMarkers() {
@@ -561,6 +602,163 @@
 			return `${minutes}:${wholeSeconds}:${secondFraction}`;
 		}
 
+		function normalizeDeg(deg) {
+			return (deg % 360 + 360) % 360;
+		}
+
+		function updateWatchFaceGradient() {
+			if (!sunMoonData || !symbolsVisible) {
+				document.querySelector('.watch-face').style.backgroundImage = '';
+				return;
+			}
+
+			const sunriseDeg = timeToDegrees(sunMoonData.sunrise);
+			const sunsetDeg = timeToDegrees(sunMoonData.sunset);
+
+			const sunriseNorm = normalizeDeg(sunriseDeg);
+			const sunsetNorm = normalizeDeg(sunsetDeg);
+
+			const isDarkMode = body.classList.contains('dark-mode');
+			const dayColor = isDarkMode ? 'var(--watch-face-dark)' : 'var(--watch-face-light)';
+			const nightEdgeColor = isDarkMode ? 'rgba(0, 0, 0, 0.1)' : 'rgba(0, 0, 0, 0.05)';
+			const nightDarkColor = isDarkMode ? 'rgba(0, 0, 0, 0.2)' : 'rgba(0, 0, 0, 0.1)';
+
+			let nightDurDeg = normalizeDeg(sunriseNorm - sunsetNorm);
+			if (nightDurDeg === 0) nightDurDeg = 360;
+
+			const gradient = `conic-gradient(from ${sunsetNorm}deg, ${nightEdgeColor} 0deg, ${nightDarkColor} 15deg, ${nightDarkColor} ${nightDurDeg - 15}deg, ${nightEdgeColor} ${nightDurDeg}deg, ${dayColor} ${nightDurDeg}deg, ${dayColor} 360deg)`;
+			document.querySelector('.watch-face').style.backgroundImage = gradient;
+		}
+
+		function timeToDegrees(date) {
+			const hours = date.getHours();
+			const minutes = date.getMinutes();
+			return (hours * 15) + (minutes / 60 * 15) - 180;
+		}
+
+		function createSunMoonSymbols(data) {
+			const container = document.getElementById('sun-moon-symbols');
+			container.innerHTML = ''; // Clear existing symbols
+			if (!is24HourMode) return;
+
+			const radius = 105;
+
+			// Sunrise
+			const sunriseAngle = timeToDegrees(data.sunrise);
+			const sunriseSymbol = document.createElement('div');
+			sunriseSymbol.className = 'sun-moon-symbol';
+			const sunriseX = Math.sin(sunriseAngle * Math.PI / 180) * radius;
+			const sunriseY = -Math.cos(sunriseAngle * Math.PI / 180) * radius;
+			sunriseSymbol.style.transform = `translate(${sunriseX}px, ${sunriseY}px)`;
+			sunriseSymbol.innerHTML = '🌅';
+			container.appendChild(sunriseSymbol);
+
+			// Sunset
+			const sunsetAngle = timeToDegrees(data.sunset);
+			const sunsetSymbol = document.createElement('div');
+			sunsetSymbol.className = 'sun-moon-symbol';
+			const sunsetX = Math.sin(sunsetAngle * Math.PI / 180) * radius;
+			const sunsetY = -Math.cos(sunsetAngle * Math.PI / 180) * radius;
+			sunsetSymbol.style.transform = `translate(${sunsetX}px, ${sunsetY}px)`;
+			sunsetSymbol.innerHTML = '🌇';
+			container.appendChild(sunsetSymbol);
+
+			// Solar Noon
+			const solarNoonAngle = timeToDegrees(data.solarNoon);
+			const solarNoonSymbol = document.createElement('div');
+			solarNoonSymbol.className = 'sun-moon-symbol';
+			const solarNoonX = Math.sin(solarNoonAngle * Math.PI / 180) * radius;
+			const solarNoonY = -Math.cos(solarNoonAngle * Math.PI / 180) * radius;
+			solarNoonSymbol.style.transform = `translate(${solarNoonX}px, ${solarNoonY}px)`;
+			solarNoonSymbol.innerHTML = '☀️';
+			container.appendChild(solarNoonSymbol);
+
+			// Moon Phase
+			const moonIllumination = SunCalc.getMoonIllumination(new Date());
+			const moonPhase = moonIllumination.phase;
+			const moonPhaseSymbol = document.createElement('div');
+			moonPhaseSymbol.className = 'sun-moon-symbol';
+			const moonX = 0;
+			const moonY = 105;
+			moonPhaseSymbol.style.transform = `translate(${moonX}px, ${moonY}px)`;
+
+			let moonIcon;
+			if (moonPhase < 0.125) moonIcon = '🌑';
+			else if (moonPhase < 0.375) moonIcon = '🌒';
+			else if (moonPhase < 0.625) moonIcon = '🌓';
+			else if (moonPhase < 0.875) moonIcon = '🌔';
+			else moonIcon = '🌕';
+
+			moonPhaseSymbol.innerHTML = `<div style="color: darkblue;">${moonIcon}</div>`;
+			container.appendChild(moonPhaseSymbol);
+		}
+
+		function fetchSunData(lat, lng) {
+			sunMoonData = SunCalc.getTimes(new Date(), lat, lng);
+			if (symbolsVisible) {
+				createSunMoonSymbols(sunMoonData);
+				updateWatchFaceGradient();
+			}
+		}
+
+		function getFallbackLocation() {
+			// Default to Munich
+			fetchSunData(48.1374, 11.5755);
+		}
+
+		function getLocation() {
+			if (navigator.geolocation) {
+				navigator.geolocation.getCurrentPosition(
+					(position) => {
+						fetchSunData(position.coords.latitude, position.coords.longitude);
+					},
+					(error) => {
+						getFallbackLocation();
+					}
+				);
+			} else {
+				getFallbackLocation();
+			}
+		}
+
+		function updateSunMoonLabel() {
+			const label = document.getElementById('label-sun-moon');
+			if (symbolsVisible && is24HourMode) {
+				label.classList.add('active');
+			} else {
+				label.classList.remove('active');
+			}
+		}
+
+		function toggleSunMoonSymbols() {
+			symbolsVisible = !symbolsVisible;
+
+			if (symbolsVisible) { // Activating
+				if (!is24HourMode) {
+					timeModeBeforeSunMoon = '12h';
+					toggleTimeMode();
+				} else {
+					const container = document.getElementById('sun-moon-symbols');
+					if (sunMoonData) {
+						createSunMoonSymbols(sunMoonData);
+						updateWatchFaceGradient();
+					} else {
+						getLocation();
+					}
+					container.style.display = 'block';
+				}
+			} else { // Deactivating
+				document.getElementById('sun-moon-symbols').style.display = 'none';
+				document.querySelector('.watch-face').style.backgroundImage = '';
+				if (timeModeBeforeSunMoon === '12h') {
+					toggleTimeMode();
+					timeModeBeforeSunMoon = null;
+				}
+			}
+			updateSunMoonLabel();
+		}
+
+
 		// --- Mode Toggles ---
 		function toggleMode() {
 			body.classList.toggle('dark-mode');
@@ -569,10 +767,26 @@
 			document.getElementById('label-dark').classList.toggle('active', isDarkMode);
 			document.getElementById('label-light').classList.toggle('active', !isDarkMode);
 			localStorage.setItem('watch-theme', isDarkMode ? 'dark' : 'light');
+			updateWatchFaceGradient();
 		}
 
 		function toggleTimeMode() {
 			is24HourMode = !is24HourMode;
+			if (!is24HourMode) {
+				document.getElementById('sun-moon-symbols').style.display = 'none';
+				document.querySelector('.watch-face').style.backgroundImage = '';
+			} else {
+				if (symbolsVisible) {
+					document.getElementById('sun-moon-symbols').style.display = 'block';
+					if (!sunMoonData) {
+						getLocation();
+					} else {
+						createSunMoonSymbols(sunMoonData);
+						updateWatchFaceGradient();
+					}
+				}
+			}
+			updateSunMoonLabel();
 			localStorage.setItem('watch-time-mode', is24HourMode ? '24h' : '12h');
 			document.getElementById('label-24h').classList.toggle('active', is24HourMode);
 			document.getElementById('label-12h').classList.toggle('active', !is24HourMode);
@@ -630,6 +844,7 @@
 		resetButton.addEventListener('click', handleReset);
 		modeToggleButton.addEventListener('click', toggleMode);
 		timeModeButton.addEventListener('click', toggleTimeMode);
+		sunMoonToggleButton.addEventListener('click', toggleSunMoonSymbols);
 
 		// --- Initialization ---
 		document.getElementById('label-start').classList.add('active');
@@ -640,6 +855,7 @@
 		setDate();
 		setInterval(setDate, 1000);
 		loadChronoState();
+		getLocation();
 
 	</script>
 </body>
