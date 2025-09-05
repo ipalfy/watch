@@ -6,363 +6,30 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Braun-Style Analog Watch</title>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/suncalc.min.js"></script>
-	<script src="https://cdn.tailwindcss.com"></script>
-	<script>
-		/* This just for reference
-		tailwind.config = {
-			theme: {
-				extend: {
-					colors: {
-						customBlue: '#1e40af',
-					},
-				},
-			},
-		};
-		*/
-	</script>
 	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
-	<style>
-		:root {
-			--bg-color-light: #f0f0f0;
-			--bg-color-dark: #1a1a1a;
-			--watch-face-light: #ffffff;
-			--watch-face-dark: #2d2d2d;
-			--text-color-light: #333333;
-			--text-color-dark: #e0e0e0;
-			--marker-color-light: #b0b0b0;
-			--marker-color-dark: #555555;
-			--marker-major-light: #000000;
-			--marker-major-dark: #e0e0e0;
-			--hand-hour-light: #bf0404;
-			--hand-hour-dark: #e0e0e0;
-			--hand-minute-light: #000000;
-			--hand-minute-dark: #e0e0e0;
-			--hand-second-color: #fdd835;
-			/* Braun yellow */
-			--chrono-hand-color: #d32f2f;
-			/* Braun red */
-			--case-shadow-light:
-				-10px -10px 20px rgba(255, 255, 255, 0.7),
-				10px 10px 20px rgba(0, 0, 0, 0.15),
-				inset -2px -2px 4px rgba(0, 0, 0, 0.1),
-				inset 2px 2px 4px rgba(255, 255, 255, 0.8);
-			--case-shadow-dark:
-				-8px -8px 15px rgba(45, 45, 45, 0.5),
-				8px 8px 15px rgba(0, 0, 0, 0.3),
-				inset -2px -2px 4px rgba(0, 0, 0, 0.5),
-				inset 2px 2px 4px rgba(45, 45, 45, 0.4);
-		}
-
-		body {
-			font-family: 'Inter', sans-serif;
-			transition: background-color 0.3s ease;
-		}
-
-		.dark-mode {
-			background-color: var(--bg-color-dark);
-		}
-
-		.light-mode {
-			background-color: var(--bg-color-light);
-		}
-
-		.watch {
-			width: 320px;
-			height: 320px;
-			box-shadow: var(--case-shadow-light);
-		}
-
-		.dark-mode .watch {
-			box-shadow: var(--case-shadow-dark);
-		}
-
-		.watch-face {
-			background-color: var(--watch-face-light);
-			transition: background-color 0.3s ease;
-			position: relative;
-		}
-
-		.watch-face::before {
-			content: '';
-			position: absolute;
-			top: 0;
-			left: 0;
-			right: 0;
-			bottom: 0;
-			border-radius: 50%;
-			background-image: var(--sun-moon-gradient);
-			opacity: 0;
-			transition: opacity 0.5s ease-in-out;
-		}
-
-		.watch-face.sun-moon-active::before {
-			opacity: 1;
-		}
-
-		.dark-mode .watch-face {
-			background-color: var(--watch-face-dark);
-		}
-
-		.marker-line {
-			position: absolute;
-			top: 0;
-			left: 50%;
-			transform: translateX(-50%);
-			background-color: var(--marker-color-light);
-			transition: background-color 0.3s ease;
-		}
-
-		.dark-mode .marker-line {
-			background-color: var(--marker-color-dark);
-		}
-
-		.dark-mode .marker-line.major {
-			background-color: var(--marker-major-dark);
-		}
-
-		.marker-line.major {
-			background-color: var(--marker-major-light);
-		}
-
-		.hand {
-			position: absolute;
-			left: 50%;
-			top: 50%;
-			transform-origin: bottom;
-			border-radius: 2px;
-			z-index: 20;
-		}
-
-		.center-pivot {
-			z-index: 25;
-			background-color: var(--hand-second-color);
-		}
-
-		.hour-hand {
-			width: 6px;
-			height: 65px;
-			background-color: var(--hand-hour-light);
-			transition: background-color 0.3s ease, transform 0.5s ease-in-out;
-		}
-
-		.dark-mode .hour-hand {
-			background-color: var(--hand-hour-dark);
-		}
-
-		.minute-hand {
-			width: 4px;
-			height: 100px;
-			background-color: var(--hand-minute-light);
-			transition: background-color 0.3s ease, transform 0.5s ease-in-out;
-		}
-
-		.dark-mode .minute-hand {
-			background-color: var(--hand-minute-dark);
-		}
-
-		.second-hand {
-			width: 2px;
-			height: 110px;
-			background-color: var(--hand-second-color);
-		}
-
-		.date-display {
-			color: var(--text-color-light);
-			transition: color 0.3s ease;
-			z-index: 5;
-		}
-
-		.dark-mode .date-display {
-			color: var(--text-color-dark);
-		}
-
-		.chrono-number {
-			color: var(--text-color-light);
-			transition: color 0.3s ease;
-			z-index: 5;
-		}
-
-		.dark-mode .chrono-number {
-			color: var(--text-color-dark);
-		}
-
-		.chrono-dial {
-			width: 80px;
-			height: 80px;
-			top: 51px;
-			border: 1px solid var(--marker-color-light);
-			background-color: var(--watch-face-light);
-			transition: background-color 0.3s ease, border-color 0.3s ease;
-			z-index: 10;
-		}
-
-		.dark-mode .chrono-dial {
-			border-color: var(--marker-color-dark);
-			background-color: var(--watch-face-dark);
-		}
-
-		.chrono-hand {
-			z-index: 11;
-		}
-
-		.watch-button {
-			position: absolute;
-			top: 50%;
-			left: 50%;
-			width: 40px;
-			height: 16px;
-			margin-top: -6px;
-			/* half of height */
-			background: linear-gradient(to bottom, #c0c0c0, #f0f0f0);
-			border: 1px solid #a0a0a0;
-			cursor: pointer;
-			box-shadow: 0 2px 3px rgba(0, 0, 0, 0.3);
-			transition: all 0.1s ease;
-			transform-origin: 0 50%;
-		}
-
-		.watch-button:active {
-			background: linear-gradient(to top, #c0c0c0, #f0f0f0);
-			box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
-		}
-
-		.dark-mode .watch-button {
-			background: linear-gradient(to bottom, #3a3a3a, #5a5a5a);
-			border-color: #222;
-		}
-
-		#start-stop-button {
-			transform: translate(138px, -104px) rotate(60deg);
-		}
-
-		#reset-button {
-			transform: translate(170px, -20px) rotate(90deg);
-		}
-
-		#mode-toggle {
-			transform: translate(138px, 100px) rotate(-60deg);
-		}
-
-		#time-mode-button {
-			transform: translate(-157px, 67px) rotate(60deg);
-		}
-
-		.button-label {
-			position: absolute;
-			font-size: 10px;
-			font-weight: 500;
-			color: var(--marker-color-light);
-			z-index: 15;
-		}
-
-		.dark-mode .button-label {
-			color: var(--marker-color-dark);
-		}
-
-		#label-ss {
-			top: 95px;
-			right: 50px;
-			transform: rotate(-30deg);
-		}
-
-		#label-rst {
-			top: 145px;
-			right: 35px;
-		}
-
-		#label-mode {
-			top: 195px;
-			right: 50px;
-			transform: rotate(30deg);
-		}
-
-		#label-time-mode {
-			top: 195px;
-			left: 55px;
-			transform: rotate(-30deg);
-		}
-
-		.hour-number {
-			position: absolute;
-			width: 30px;
-			height: 30px;
-			top: 50%;
-			left: 50%;
-			margin: -15px 0 0 -15px;
-			text-align: center;
-			line-height: 30px;
-			font-size: 20px;
-			font-weight: 500;
-			color: var(--text-color-light);
-			transition: color 0.3s ease, transform 0.5s ease-in-out, font-size 0.5s ease-in-out, opacity 0.5s ease-in-out;
-		}
-
-		.dark-mode .hour-number {
-			color: var(--text-color-dark);
-		}
-
-		.button-label .active {
-			color: #d32f2f;
-			/* Braun red */
-		}
-
-		#sun-moon-toggle {
-			transform: translate(-160px, -70px) rotate(-59deg);
-		}
-
-		#label-sun-moon {
-			top: 100px;
-			left: 58px;
-			transform: rotate(30deg);
-		}
-
-		.sun-moon-symbol {
-			position: absolute;
-			width: 20px;
-			height: 20px;
-			top: 50%;
-			left: 50%;
-			margin: -10px 0 0 -10px;
-			text-align: center;
-			line-height: 20px;
-			font-size: 14px;
-			z-index: 15;
-		}
-	</style>
+	<link rel="stylesheet" href="style.css">
 </head>
 
-<body class="light-mode flex items-center justify-center min-h-screen">
-	<div class="absolute top-4 left-4 z-50">
-		<button id="menu-button" class="p-2 rounded-md bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-gray-200">
-			<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+<body>
+	<div class="menu-container">
+		<button id="menu-button" class="menu-button">
+			<svg class="menu-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"
 				xmlns="http://www.w3.org/2000/svg">
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
 			</svg>
 		</button>
-		<div id="menu" class="hidden absolute top-12 left-0 bg-white dark:bg-gray-900 rounded-md shadow-lg p-2 w-48">
-			<a href="demos/grok-sunclock.html"
-				class="block px-4 py-2 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md"
-				title="Sun status by Grok.">Grok
+		<div id="menu" class="menu hidden">
+			<a href="demos/grok-sunclock.html" class="menu-item" title="Sun status by Grok.">Grok
 				sun status</a>
-			<a href="demos/chrono-demo.html"
-				class="block px-4 py-2 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md"
-				title="A lap timer created by Grok.">Grok
+			<a href="demos/chrono-demo.html" class="menu-item" title="A lap timer created by Grok.">Grok
 				Lap timer</a>
-			<a href="demos/grok-calculator.html"
-				class="block px-4 py-2 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md"
-				title="A calculator interface created by Grok.">Grok
+			<a href="demos/grok-calculator.html" class="menu-item" title="A calculator interface created by Grok.">Grok
 				Calculator</a>
-			<a href="demos/grok-clock.html"
-				class="block px-4 py-2 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md"
-				title="A clock face created by Grok.">Grok
+			<a href="demos/grok-clock.html" class="menu-item" title="A clock face created by Grok.">Grok
 				Clock</a>
-			<a href="demos/qwen-munich.html"
-				class="block px-4 py-2 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md"
-				title="A Munich-style clock by Qwen.">Qwen
+			<a href="demos/qwen-munich.html" class="menu-item" title="A Munich-style clock by Qwen.">Qwen
 				Munich</a>
-			<a href="demos/qwen-watch.html"
-				class="block px-4 py-2 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md"
-				title="A watch face by Qwen.">Qwen
+			<a href="demos/qwen-watch.html" class="menu-item" title="A watch face by Qwen.">Qwen
 				Watch</a>
 		</div>
 	</div>
@@ -374,18 +41,18 @@
 			menu.classList.toggle('hidden');
 		});
 	</script>
-	<div id="watch" class="watch relative rounded-full flex items-center justify-center">
+	<div id="watch" class="watch">
 
-		<div class="watch-face absolute w-full h-full rounded-full border-8 border-gray-300 dark:border-gray-700">
+		<div class="watch-face">
 
 			<!-- Sun/Moon Symbols -->
 			<div id="sun-moon-symbols" style="display: none;"></div>
 
 			<!-- Markers -->
-			<div class="markers-container absolute w-full h-full z-0"></div>
+			<div class="markers-container"></div>
 
 			<!-- Numbers -->
-			<div class="numbers-container absolute w-full h-full z-1"></div>
+			<div class="numbers-container"></div>
 
 			<!-- Button Labels -->
 			<div id="label-ss" class="button-label">
@@ -404,21 +71,21 @@
 			<div class="hand hour-hand"></div>
 			<div class="hand minute-hand"></div>
 			<div class="hand second-hand"></div>
-			<div class="center-pivot absolute w-4 h-4 dark:bg-white rounded-full top-1/2 left-1/2 -mt-2 -ml-2"></div>
+			<div class="center-pivot"></div>
 
 			<!-- Date Display -->
-			<div class="date-display absolute left-[120px] top-[210px] -mt-3 text-sm font-semibold text-center"></div>
+			<div class="date-display"></div>
 
 			<!-- Digital Display -->
 			<div
-				class="digital-display absolute left-[40px] top-[150px] -mt-3 text-sm bg-red-600 text-white p-1 rounded text-center w-20">
+				class="digital-display">
 			</div>
 
 			<!-- Chronometer -->
-			<div class="chrono-dial absolute left-1/2 -ml-10 rounded-full flex items-center justify-center">
-				<div class="hand chrono-hand w-0.5 h-[30px] bg-red-600"></div>
-				<div class="absolute w-2 h-2 bg-red-600 rounded-full top-1/2 left-1/2 -mt-1 -ml-1 z-10"></div>
-				<div class="chrono-number absolute top-[45px] left-[10px] z-10 text-sm text-center"></div>
+			<div class="chrono-dial">
+				<div class="hand chrono-hand"></div>
+				<div class="chrono-pivot"></div>
+				<div class="chrono-number"></div>
 			</div>
 
 			<!-- Buttons -->
@@ -468,7 +135,7 @@
 			for (let i = 0; i < markers; i++) {
 				const rotation = i * step;
 				const markerWrapper = document.createElement('div');
-				markerWrapper.className = 'absolute w-full h-full';
+				markerWrapper.className = 'marker-wrapper';
 				markerWrapper.style.transform = `rotate(${rotation}deg)`;
 
 				const markerLine = document.createElement('div');
@@ -570,9 +237,10 @@
 			const dayOfWeek = now.toLocaleDateString(undefined, { weekday: 'long' });
 			const monthName = now.toLocaleDateString(undefined, { month: 'long' });
 			const month = String(now.getMonth() + 1).padStart(2, '0');
+			const year = String(now.getFullYear()).slice(-2);
 
 			digitalDisplay.textContent = now.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-			dateDisplay.innerHTML = `${dayOfWeek}<br>${day}.${month} ${now.getFullYear()}`;
+			dateDisplay.innerHTML = `${dayOfWeek}<br>${day}.${month}.${year}`;
 		}
 
 		// --- Chronometer Logic ---
