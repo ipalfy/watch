@@ -57,21 +57,24 @@
 			<!-- Button Labels -->
 			<div id="label-ss" class="button-label">
 				<span id="label-start" class="active">Start</span> |
-				<span id="label-stop">Stop</span>
+				<span id="label-lap">Lap</span>
 			</div>
-			
-			<div id="label-rst" class="button-label">Reset</div>
-			
+
+			<div id="label-rst" class="button-label">
+				<span id="label-stop">Stop</span> |
+				<span id="label-reset">Reset</span>
+			</div>
+
 			<div id="label-mode" class="button-label">
 				<span id="label-light" class="active">Light</span> |
 				<span id="label-dark">Dark</span>
 			</div>
-			
+
 			<div id="label-time-mode" class="button-label">
 				<span id="label-12h" class="active">12h</span> |
 				<span id="label-24h">24h</span>
 			</div>
-			
+
 			<div id="label-sun-moon" class="button-label">Sun/Moon</div>
 
 			<!-- Hands -->
@@ -125,6 +128,8 @@
 		let chronoInterval = null;
 		let chronoSeconds = 0;
 		let isChronoRunning = false;
+		let lapTimes = [];
+		let lapHandCounter = 0;
 		let is24HourMode = false;
 		let sunMoonData = null;
 		let symbolsVisible = false;
@@ -183,9 +188,9 @@
 					markerLine.style.width = '2px';
 					markerLine.style.height = '6px';
 					markerLine.classList.add('major');
-				// } else { // Every second
-				// 	markerLine.style.width = '1px';
-				// 	markerLine.style.height = '4px';
+					// } else { // Every second
+					// 	markerLine.style.width = '1px';
+					// 	markerLine.style.height = '4px';
 				}
 
 				markerWrapper.appendChild(markerLine);
@@ -276,14 +281,9 @@
 		}
 
 		// --- Chronometer Logic ---
-		function handleStartStop() {
-			if (isChronoRunning) {
-				clearInterval(chronoInterval);
-				isChronoRunning = false;
-				localStorage.setItem('chrono-running', 'false');
-				localStorage.setItem('chrono-seconds', chronoSeconds);
-				localStorage.removeItem('chrono-startTime');
-			} else {
+		function handleStartLap() {
+			if (!isChronoRunning) {
+				isChronoRunning = true;
 				const startTime = Date.now() - (chronoSeconds * 1000);
 				localStorage.setItem('chrono-startTime', startTime);
 				localStorage.setItem('chrono-running', 'true');
@@ -294,24 +294,49 @@
 					chronoHand.style.transform = `translate(-50%, -100%) rotate(${chronoDegrees}deg)`;
 					chronoNumber.textContent = formatSeconds(chronoSeconds);
 				}, 50);
-				isChronoRunning = true;
+			} else {
+				const lapTime = chronoSeconds;
+				lapTimes.push(lapTime);
+				const lapHand = document.createElement('div');
+				lapHand.className = 'hand lap-hand';
+				lapHand.style.backgroundColor = 'black';
+				lapHand.style.width = '2px';
+				lapHand.style.height = '35px';
+				const chronoDegrees = ((lapTime % 60) / 60) * 360;
+				lapHand.style.transform = `translate(-50%, -100%) rotate(${chronoDegrees}deg)`;
+				document.querySelector('.chrono-dial').appendChild(lapHand);
 			}
-			document.getElementById('label-stop').classList.toggle('active', isChronoRunning);
-			document.getElementById('label-start').classList.toggle('active', !isChronoRunning);
+			updateChronoLabels();
 		}
 
-		function handleReset() {
-			clearInterval(chronoInterval);
-			isChronoRunning = false;
-			chronoSeconds = 0;
-			chronoNumber.textContent = '';
-			chronoHand.style.transform = 'translate(-50%, -100%) rotate(0deg)';
-			document.getElementById('label-stop').classList.remove('active');
-			document.getElementById('label-start').classList.add('active');
-			localStorage.removeItem('chrono-running');
-			localStorage.removeItem('chrono-seconds');
-			localStorage.removeItem('chrono-startTime');
+		function handleStopReset() {
+			if (isChronoRunning) {
+				isChronoRunning = false;
+				clearInterval(chronoInterval);
+				localStorage.setItem('chrono-running', 'false');
+				localStorage.setItem('chrono-seconds', chronoSeconds);
+				localStorage.removeItem('chrono-startTime');
+			} else {
+				chronoSeconds = 0;
+				lapTimes = [];
+				chronoNumber.textContent = '';
+				chronoHand.style.transform = 'translate(-50%, -100%) rotate(0deg)';
+				const lapHands = document.querySelectorAll('.lap-hand');
+				lapHands.forEach(hand => hand.remove());
+				localStorage.removeItem('chrono-running');
+				localStorage.removeItem('chrono-seconds');
+				localStorage.removeItem('chrono-startTime');
+			}
+			updateChronoLabels();
 		}
+
+		function updateChronoLabels() {
+			document.getElementById('label-start').classList.toggle('active', !isChronoRunning);
+			document.getElementById('label-lap').classList.toggle('active', isChronoRunning);
+			document.getElementById('label-stop').classList.toggle('active', isChronoRunning);
+			document.getElementById('label-reset').classList.toggle('active', !isChronoRunning && chronoSeconds > 0);
+		}
+
 
 		function formatSeconds(seconds) {
 			const minutes = Math.floor(seconds / 60).toString().padStart(2, '0');
@@ -550,7 +575,7 @@
 				const startTime = parseInt(localStorage.getItem('chrono-startTime'), 10);
 				if (startTime) {
 					chronoSeconds = (Date.now() - startTime) / 1000;
-					handleStartStop();
+					handleStartLap();
 				}
 			} else {
 				chronoSeconds = parseFloat(localStorage.getItem('chrono-seconds')) || 0;
@@ -560,11 +585,12 @@
 					chronoNumber.textContent = formatSeconds(chronoSeconds);
 				}
 			}
+			updateChronoLabels();
 		}
 
 		// --- Event Listeners ---
-		startStopButton.addEventListener('click', handleStartStop);
-		resetButton.addEventListener('click', handleReset);
+		startStopButton.addEventListener('click', handleStartLap);
+		resetButton.addEventListener('click', handleStopReset);
 		modeToggleButton.addEventListener('click', toggleMode);
 		timeModeButton.addEventListener('click', toggleTimeMode);
 		sunMoonToggleButton.addEventListener('click', toggleSunMoonSymbols);

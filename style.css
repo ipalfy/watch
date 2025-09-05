@@ -317,8 +317,8 @@ body {
 
 .hour-number {
 	position: absolute;
-	width: 30px;
 	height: 30px;
+	width: 30px;
 	top: 50%;
 	left: 50%;
 	margin: -15px 0 0 -15px;
