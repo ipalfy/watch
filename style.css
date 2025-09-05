@@ -193,9 +193,9 @@ body {
   z-index: 5;
     position: absolute;
     top: 45px;
-    left: 10px;
+    left: 20px;
     z-index: 10;
-    font-size: 0.875rem;
+    font-size: 0.6rem;
     text-align: center;
 }
 
@@ -206,7 +206,7 @@ body {
 .chrono-dial {
   width: 80px;
   height: 80px;
-  top: 51px;
+  top: 57px;
   border: 1px solid var(--marker-color-light);
   background-color: var(--watch-face-light);
   transition: background-color 0.3s ease, border-color 0.3s ease;
@@ -227,8 +227,8 @@ body {
 
 .chrono-hand {
   z-index: 11;
-    width: 0.125rem;
-    height: 30px;
+    width: 0.1rem;
+    height: 25px;
     background-color: #DC2626;
 }
 
@@ -468,4 +468,31 @@ body {
     position: absolute;
     width: 100%;
     height: 100%;
+}
+
+.chrono-dial .marker-wrapper {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+.chrono-dial .marker-line {
+    position: absolute;
+    top: 5px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--marker-color-light);
+    transition: background-color 0.3s ease;
+}
+
+.dark-mode .chrono-dial .marker-line {
+    background-color: var(--marker-color-dark);
+}
+
+.chrono-dial .marker-line.major {
+    background-color: var(--marker-major-light);
+}
+
+.dark-mode .chrono-dial .marker-line.major {
+    background-color: var(--marker-major-dark);
 }

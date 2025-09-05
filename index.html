@@ -161,6 +161,34 @@
 			}
 		}
 
+		function createChronoMarkers() {
+			const chronoDial = document.querySelector('.chrono-dial');
+			const markers = 60;
+			const step = 360 / markers;
+
+			for (let i = 0; i < markers; i++) {
+				const rotation = i * step;
+				const markerWrapper = document.createElement('div');
+				markerWrapper.className = 'marker-wrapper';
+				markerWrapper.style.transform = `rotate(${rotation}deg)`;
+
+				const markerLine = document.createElement('div');
+				markerLine.classList.add('marker-line');
+
+				if (i % 5 === 0) { // Every 5 seconds
+					markerLine.style.width = '2px';
+					markerLine.style.height = '6px';
+					markerLine.classList.add('major');
+				// } else { // Every second
+				// 	markerLine.style.width = '1px';
+				// 	markerLine.style.height = '4px';
+				}
+
+				markerWrapper.appendChild(markerLine);
+				chronoDial.appendChild(markerWrapper);
+			}
+		}
+
 		// --- Create Hour Numbers ---
 		function createHourNumbers() {
 			const hours = is24HourMode ? 24 : 12;
@@ -542,6 +570,7 @@
 		loadTheme();
 		loadTimeMode();
 		createMarkers();
+		createChronoMarkers();
 		createHourNumbers();
 		setDate();
 		setInterval(setDate, 1000);
