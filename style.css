@@ -1,498 +1,502 @@
 :root {
-  --bg-color-light: #f0f0f0;
-  --bg-color-dark: #1a1a1a;
-  --watch-face-light: #ffffff;
-  --watch-face-dark: #2d2d2d;
-  --text-color-light: #333333;
-  --text-color-dark: #e0e0e0;
-  --marker-color-light: #b0b0b0;
-  --marker-color-dark: #555555;
-  --marker-major-light: #000000;
-  --marker-major-dark: #e0e0e0;
-  --hand-hour-light: #bf0404;
-  --hand-hour-dark: #e0e0e0;
-  --hand-minute-light: #000000;
-  --hand-minute-dark: #e0e0e0;
-  --hand-second-color: #fdd835;
-  /* Braun yellow */
-  --chrono-hand-color: #d32f2f;
-  /* Braun red */
-  --case-shadow-light: -10px -10px 20px rgba(255, 255, 255, 0.7),
-    10px 10px 20px rgba(0, 0, 0, 0.15),
-    inset -2px -2px 4px rgba(0, 0, 0, 0.1),
-    inset 2px 2px 4px rgba(255, 255, 255, 0.8);
-  --case-shadow-dark: -8px -8px 15px rgba(45, 45, 45, 0.5),
-    8px 8px 15px rgba(0, 0, 0, 0.3),
-    inset -2px -2px 4px rgba(0, 0, 0, 0.5),
-    inset 2px 2px 4px rgba(45, 45, 45, 0.4);
+	--bg-color-light: #f0f0f0;
+	--bg-color-dark: #1a1a1a;
+	--watch-face-light: #ffffff;
+	--watch-face-dark: #2d2d2d;
+	--text-color-light: #333333;
+	--text-color-dark: #e0e0e0;
+	--marker-color-light: #b0b0b0;
+	--marker-color-dark: #555555;
+	--marker-major-light: #000000;
+	--marker-major-dark: #e0e0e0;
+	--hand-hour-light: #bf0404;
+	--hand-hour-dark: #e0e0e0;
+	--hand-minute-light: #000000;
+	--hand-minute-dark: #e0e0e0;
+	--hand-second-color: #fdd835;
+	/* Braun yellow */
+	--chrono-hand-color: #d32f2f;
+	/* Braun red */
+	--case-shadow-light: -10px -10px 20px rgba(255, 255, 255, 0.7),
+		10px 10px 20px rgba(0, 0, 0, 0.15),
+		inset -2px -2px 4px rgba(0, 0, 0, 0.1),
+		inset 2px 2px 4px rgba(255, 255, 255, 0.8);
+	--case-shadow-dark: -8px -8px 15px rgba(45, 45, 45, 0.5),
+		8px 8px 15px rgba(0, 0, 0, 0.3),
+		inset -2px -2px 4px rgba(0, 0, 0, 0.5),
+		inset 2px 2px 4px rgba(45, 45, 45, 0.4);
 }
 
 body {
-  font-family: 'Inter', sans-serif;
-  transition: background-color 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
+	font-family: 'Inter', sans-serif;
+	transition: background-color 0.3s ease;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 100vh;
 }
 
 .dark-mode {
-  background-color: var(--bg-color-dark);
+	background-color: var(--bg-color-dark);
 }
 
 .light-mode {
-  background-color: var(--bg-color-light);
+	background-color: var(--bg-color-light);
 }
 
 .watch {
-  width: 320px;
-  height: 320px;
-  box-shadow: var(--case-shadow-light), 0 0 0 8px #ccc, 0 0 0 10px #e0e0e0, 0 0 0 12px #ccc;
-  position: relative;
-  border-radius: 9999px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+	width: 320px;
+	height: 320px;
+	box-shadow: var(--case-shadow-light), 0 0 0 8px #ccc, 0 0 0 10px #e0e0e0, 0 0 0 12px #ccc;
+	position: relative;
+	border-radius: 9999px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 }
 
 .dark-mode .watch {
-  box-shadow: var(--case-shadow-dark), 0 0 0 8px #333, 0 0 0 10px #555, 0 0 0 12px #333;
+	box-shadow: var(--case-shadow-dark), 0 0 0 8px #333, 0 0 0 10px #555, 0 0 0 12px #333;
 }
 
 .watch-face {
-  background-color: var(--watch-face-light);
-  transition: background-color 0.7s ease;
-  position: relative;
-  width: 100%;
-  height: 100%;
-  border-radius: 9999px;
-  /* border: 8px solid #D1D5DB; */
+	background-color: var(--watch-face-light);
+	transition: background-color 0.7s ease;
+	position: relative;
+	width: 100%;
+	height: 100%;
+	border-radius: 9999px;
+	/* border: 8px solid #D1D5DB; */
 }
 
 .dark-mode .watch-face {
-    background-color: var(--watch-face-dark);
-    border-color: #374151;
+	background-color: var(--watch-face-dark);
+	border-color: #374151;
 }
 
 .watch-face::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  border-radius: 50%;
-  background-image: var(--sun-moon-gradient);
-  opacity: 0;
-  transition: opacity 1.5s ease-in-out;
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	border-radius: 50%;
+	background-image: var(--sun-moon-gradient);
+	opacity: 0;
+	transition: opacity 1.5s ease-in-out;
 }
 
 .watch-face.sun-moon-active::before {
-  opacity: 1;
+	opacity: 1;
 }
 
 .dark-mode .watch-face {
-  background-color: var(--watch-face-dark);
+	background-color: var(--watch-face-dark);
 }
 
 .marker-line {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: var(--marker-color-light);
-  transition: background-color 0.3s ease;
+	position: absolute;
+	top: 0;
+	left: 50%;
+	transform: translateX(-50%);
+	background-color: var(--marker-color-light);
+	transition: background-color 0.3s ease;
 }
 
 .dark-mode .marker-line {
-  background-color: var(--marker-color-dark);
+	background-color: var(--marker-color-dark);
 }
 
 .dark-mode .marker-line.major {
-  background-color: var(--marker-major-dark);
+	background-color: var(--marker-major-dark);
 }
 
 .marker-line.major {
-  background-color: var(--marker-major-light);
+	background-color: var(--marker-major-light);
 }
 
 .hand {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform-origin: bottom;
-  border-radius: 2px;
-  z-index: 20;
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	transform-origin: bottom;
+	border-radius: 2px;
+	z-index: 20;
 }
 
 .center-pivot {
-  z-index: 25;
-  background-color: var(--hand-second-color);
-  position: absolute;
-    width: 1rem;
-    height: 1rem;
-    border-radius: 9999px;
-    top: 50%;
-    left: 50%;
-    margin-top: -0.5rem;
-    margin-left: -0.5rem;
+	z-index: 25;
+	background-color: var(--hand-second-color);
+	position: absolute;
+	width: 1rem;
+	height: 1rem;
+	border-radius: 9999px;
+	top: 50%;
+	left: 50%;
+	margin-top: -0.5rem;
+	margin-left: -0.5rem;
 }
 
 .dark-mode .center-pivot {
-    background-color: #FFFFFF;
+	background-color: #FFFFFF;
 }
 
 .hour-hand {
-  width: 6px;
-  height: 65px;
-  background-color: var(--hand-hour-light);
-  transition: background-color 0.3s ease, transform 0.5s ease-in-out;
+	width: 6px;
+	height: 65px;
+	background-color: var(--hand-hour-light);
+	transition: background-color 0.3s ease, transform 0.5s ease-in-out;
 }
 
 .dark-mode .hour-hand {
-  background-color: var(--hand-hour-dark);
+	background-color: var(--hand-hour-dark);
 }
 
 .minute-hand {
-  width: 4px;
-  height: 100px;
-  background-color: var(--hand-minute-light);
-  transition: background-color 0.3s ease, transform 0.5s ease-in-out;
+	width: 4px;
+	height: 100px;
+	background-color: var(--hand-minute-light);
+	transition: background-color 0.3s ease, transform 0.5s ease-in-out;
 }
 
 .dark-mode .minute-hand {
-  background-color: var(--hand-minute-dark);
+	background-color: var(--hand-minute-dark);
 }
 
 .second-hand {
-  width: 2px;
-  height: 110px;
-  background-color: var(--hand-second-color);
+	width: 2px;
+	height: 110px;
+	background-color: var(--hand-second-color);
 }
 
 .date-display {
-  color: var(--text-color-light);
-  transition: color 0.3s ease;
-  z-index: 5;
-  position: absolute;
-    left: 125px;
-    top: 230px;
-    margin-top: -0.75rem;
-    font-size: 0.875rem;
-    font-weight: 600;
-    text-align: center;
+	color: var(--text-color-light);
+	transition: color 0.3s ease;
+	z-index: 5;
+	position: absolute;
+	left: 125px;
+	top: 230px;
+	margin-top: -0.75rem;
+	
+	font-size: 0.875rem;
+	font-weight: 600;
+	text-align: center;
+
+	background-color: #dbd9d9;
+	padding: 0.25rem;
+	border-radius: 0.25rem;
 }
 
 .dark-mode .date-display {
-  color: var(--text-color-dark);
+	color: var(--text-color-dark);
 }
 
 .chrono-number {
-  color: var(--text-color-light);
-  transition: color 0.3s ease;
-  z-index: 5;
-    position: absolute;
-    top: 45px;
-    left: 20px;
-    z-index: 10;
-    font-size: 0.6rem;
-    text-align: center;
+	color: var(--text-color-light);
+	transition: color 0.3s ease;
+	z-index: 5;
+	position: absolute;
+	top: 45px;
+	left: 20px;
+	z-index: 10;
+	font-size: 0.6rem;
+	text-align: center;
 }
 
 .dark-mode .chrono-number {
-  color: var(--text-color-dark);
+	color: var(--text-color-dark);
 }
 
 .chrono-dial {
-  width: 80px;
-  height: 80px;
-  top: 57px;
-  border: 1px solid var(--marker-color-light);
-  background-color: var(--watch-face-light);
-  transition: background-color 0.3s ease, border-color 0.3s ease;
-  z-index: 10;
-    position: absolute;
-    left: 50%;
-    margin-left: -2.5rem;
-    border-radius: 9999px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+	width: 80px;
+	height: 80px;
+	top: 57px;
+	border: 1px solid var(--marker-color-light);
+	background-color: var(--watch-face-light);
+	transition: background-color 0.3s ease, border-color 0.3s ease;
+	z-index: 10;
+	position: absolute;
+	left: 50%;
+	margin-left: -2.5rem;
+	border-radius: 9999px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 }
 
 .dark-mode .chrono-dial {
-  border-color: var(--marker-color-dark);
-  background-color: var(--watch-face-dark);
+	border-color: var(--marker-color-dark);
+	background-color: var(--watch-face-dark);
 }
 
 .chrono-hand {
-  z-index: 11;
-    width: 0.1rem;
-    height: 25px;
-    background-color: #DC2626;
+	z-index: 11;
+	width: 0.1rem;
+	height: 25px;
+	background-color: #DC2626;
 }
 
 .watch-button {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 40px;
-  height: 16px;
-  margin-top: -6px;
-  /* half of height */
-  background: linear-gradient(to bottom, #c0c0c0, #f0f0f0);
-  border: 1px solid #a0a0a0;
-  cursor: pointer;
-  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.3);
-  transition: all 0.1s ease;
-  transform-origin: 0 50%;
-  z-index: 15;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 40px;
+	height: 16px;
+	margin-top: -6px;
+	/* half of height */
+	background: linear-gradient(to bottom, #c0c0c0, #f0f0f0);
+	border: 1px solid #a0a0a0;
+	cursor: pointer;
+	box-shadow: 0 2px 3px rgba(0, 0, 0, 0.3);
+	transition: all 0.1s ease;
+	transform-origin: 0 50%;
+	z-index: 15;
 }
 
 .watch-button:active {
-  background: linear-gradient(to top, #c0c0c0, #f0f0f0);
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
+	background: linear-gradient(to top, #c0c0c0, #f0f0f0);
+	box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .dark-mode .watch-button {
-  background: linear-gradient(to bottom, #3a3a3a, #5a5a5a);
-  border-color: #222;
+	background: linear-gradient(to bottom, #3a3a3a, #5a5a5a);
+	border-color: #222;
 }
 
 #start-stop-button {
-  transform: translate(138px, -104px) rotate(60deg);
+	transform: translate(138px, -104px) rotate(60deg);
 }
 
 #reset-button {
-  transform: translate(170px, -20px) rotate(90deg);
+	transform: translate(170px, -20px) rotate(90deg);
 }
 
 #mode-toggle {
-  transform: translate(138px, 100px) rotate(-60deg);
+	transform: translate(138px, 100px) rotate(-60deg);
 }
 
 #time-mode-button {
-  transform: translate(-157px, 67px) rotate(60deg);
+	transform: translate(-157px, 67px) rotate(60deg);
 }
 
 .button-label {
-  position: absolute;
-  font-size: 10px;
-  font-weight: 500;
-  color: var(--marker-color-light);
-  z-index: 15;
+	position: absolute;
+	font-size: 10px;
+	font-weight: 500;
+	color: var(--marker-color-light);
+	z-index: 15;
 }
 
 .dark-mode .button-label {
-  color: var(--marker-color-dark);
+	color: var(--marker-color-dark);
 }
 
 #label-ss {
-  top: 105px;
-  right: 60px;
-  transform: rotate(-30deg);
+	top: 105px;
+	right: 60px;
+	transform: rotate(-30deg);
 }
 
 #label-rst {
-  top: 153px;
-  right: 45px;
+	top: 153px;
+	right: 45px;
 }
 
 #label-mode {
-  top: 200px;
-  right: 60px;
-  transform: rotate(30deg);
+	top: 200px;
+	right: 60px;
+	transform: rotate(30deg);
 }
 
 #label-time-mode {
-  top: 200px;
-  left: 60px;
-  transform: rotate(-30deg);
+	top: 200px;
+	left: 60px;
+	transform: rotate(-30deg);
 }
 
 .hour-number {
-  position: absolute;
-  width: 30px;
-  height: 30px;
-  top: 50%;
-  left: 50%;
-  margin: -15px 0 0 -15px;
-  text-align: center;
-  line-height: 30px;
-  font-size: 20px;
-  font-weight: 500;
-  color: var(--text-color-light);
-  transition: color 0.3s ease, transform 0.5s ease-in-out,
-    font-size 0.5s ease-in-out, opacity 0.5s ease-in-out;
+	position: absolute;
+	width: 30px;
+	height: 30px;
+	top: 50%;
+	left: 50%;
+	margin: -15px 0 0 -15px;
+	text-align: center;
+	line-height: 30px;
+	font-size: 20px;
+	font-weight: 500;
+	color: var(--text-color-light);
+	transition: color 0.3s ease, transform 0.5s ease-in-out,
+		font-size 0.5s ease-in-out, opacity 0.5s ease-in-out;
 }
 
 .dark-mode .hour-number {
-  color: var(--text-color-dark);
+	color: var(--text-color-dark);
 }
 
 .button-label .active {
-  color: #d32f2f;
-  /* Braun red */
+	color: #d32f2f;
+	/* Braun red */
 }
 
 #sun-moon-toggle {
-  transform: translate(-160px, -70px) rotate(-59deg);
+	transform: translate(-160px, -70px) rotate(-59deg);
 }
 
 #label-sun-moon {
-  top: 110px;
-  left: 65px;
-  transform: rotate(30deg);
+	top: 110px;
+	left: 65px;
+	transform: rotate(30deg);
 }
 
 .sun-moon-symbol {
-  position: absolute;
-  width: 20px;
-  height: 20px;
-  top: 50%;
-  left: 50%;
-  margin: -10px 0 0 -10px;
-  text-align: center;
-  line-height: 20px;
-  font-size: 14px;
-  z-index: 15;
+	position: absolute;
+	width: 20px;
+	height: 20px;
+	top: 50%;
+	left: 50%;
+	margin: -10px 0 0 -10px;
+	text-align: center;
+	line-height: 20px;
+	font-size: 14px;
+	z-index: 15;
 }
 
 .menu-container {
-    position: absolute;
-    top: 1rem;
-    left: 1rem;
-    z-index: 50;
+	position: absolute;
+	top: 1rem;
+	left: 1rem;
+	z-index: 50;
 }
 
 .menu-button {
-    padding: 0.5rem;
-    border-radius: 0.375rem;
-    background-color: #E5E7EB;
-    color: #1F2937;
+	padding: 0.5rem;
+	border-radius: 0.375rem;
+	background-color: #E5E7EB;
+	color: #1F2937;
 }
 
 .dark-mode .menu-button {
-    background-color: #1F2937;
-    color: #E5E7EB;
+	background-color: #1F2937;
+	color: #E5E7EB;
 }
 
 .menu-icon {
-    width: 1.5rem;
-    height: 1.5rem;
+	width: 1.5rem;
+	height: 1.5rem;
 }
 
 .menu {
-    position: absolute;
-    top: 3rem;
-    left: 0;
-    background-color: #FFFFFF;
-    border-radius: 0.375rem;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    padding: 0.5rem;
-    width: 12rem;
+	position: absolute;
+	top: 3rem;
+	left: 0;
+	background-color: #FFFFFF;
+	border-radius: 0.375rem;
+	box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+	padding: 0.5rem;
+	width: 12rem;
 }
 
 .dark-mode .menu {
-    background-color: #111827;
+	background-color: #111827;
 }
 
 .hidden {
-    display: none;
+	display: none;
 }
 
 .menu-item {
-    display: block;
-    padding-left: 1rem;
-    padding-right: 1rem;
-    padding-top: 0.5rem;
-    padding-bottom: 0.5rem;
-    color: #1F2937;
-    border-radius: 0.375rem;
+	display: block;
+	padding-left: 1rem;
+	padding-right: 1rem;
+	padding-top: 0.5rem;
+	padding-bottom: 0.5rem;
+	color: #1F2937;
+	border-radius: 0.375rem;
 }
 
 .dark-mode .menu-item {
-    color: #E5E7EB;
+	color: #E5E7EB;
 }
 
 .menu-item:hover {
-    background-color: #F3F4F6;
+	background-color: #F3F4F6;
 }
 
 .dark-mode .menu-item:hover {
-    background-color: #1F2937;
+	background-color: #1F2937;
 }
 
 .markers-container {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    z-index: 0;
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	z-index: 0;
 }
 
 .numbers-container {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    z-index: 1;
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	z-index: 1;
 }
 
 .digital-display {
-    position: absolute;
-    left: 50px;
-    top: 160px;
-    margin-top: -0.75rem;
-    font-size: 0.875rem;
-    background-color: #DC2626;
-    color: #FFFFFF;
-    padding: 0.25rem;
-    border-radius: 0.25rem;
-    text-align: center;
-    width: 4rem;
+	position: absolute;
+	left: 50px;
+	top: 160px;
+	margin-top: -0.75rem;
+	font-size: 0.875rem;
+	background-color: #DC2626;
+	color: #FFFFFF;
+	padding: 0.25rem;
+	border-radius: 0.25rem;
+	width: 4rem;
 }
 
 .chrono-pivot {
-    position: absolute;
-    width: 0.5rem;
-    height: 0.5rem;
-    background-color: #DC2626;
-    border-radius: 9999px;
-    top: 50%;
-    left: 50%;
-    margin-top: -0.25rem;
-    margin-left: -0.25rem;
-    z-index: 10;
+	position: absolute;
+	width: 0.5rem;
+	height: 0.5rem;
+	background-color: #DC2626;
+	border-radius: 9999px;
+	top: 50%;
+	left: 50%;
+	margin-top: -0.25rem;
+	margin-left: -0.25rem;
+	z-index: 10;
 }
 
 .marker-wrapper {
-    position: absolute;
-    width: 100%;
-    height: 100%;
+	position: absolute;
+	width: 100%;
+	height: 100%;
 }
 
 .chrono-dial .marker-wrapper {
-    position: absolute;
-    width: 100%;
-    height: 100%;
+	position: absolute;
+	width: 100%;
+	height: 100%;
 }
 
 .chrono-dial .marker-line {
-    position: absolute;
-    top: 5px;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: var(--marker-color-light);
-    transition: background-color 0.3s ease;
+	position: absolute;
+	top: 5px;
+	left: 50%;
+	transform: translateX(-50%);
+	background-color: var(--marker-color-light);
+	transition: background-color 0.3s ease;
 }
 
 .dark-mode .chrono-dial .marker-line {
-    background-color: var(--marker-color-dark);
+	background-color: var(--marker-color-dark);
 }
 
 .chrono-dial .marker-line.major {
-    background-color: var(--marker-major-light);
+	background-color: var(--marker-major-light);
 }
 
 .dark-mode .chrono-dial .marker-line.major {
-    background-color: var(--marker-major-dark);
+	background-color: var(--marker-major-dark);
 }
