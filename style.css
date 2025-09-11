@@ -453,6 +453,7 @@ body {
 	padding: 0.25rem;
 	border-radius: 0.25rem;
 	width: 4rem;
+	text-align: center;
 }
 
 .chrono-pivot {
