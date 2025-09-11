@@ -317,15 +317,29 @@
 				localStorage.setItem('chrono-seconds', chronoSeconds);
 				localStorage.removeItem('chrono-startTime');
 			} else {
-				chronoSeconds = 0;
-				lapTimes = [];
-				chronoNumber.textContent = '';
-				chronoHand.style.transform = 'translate(-50%, -100%) rotate(0deg)';
-				const lapHands = document.querySelectorAll('.lap-hand');
-				lapHands.forEach(hand => hand.remove());
-				localStorage.removeItem('chrono-running');
-				localStorage.removeItem('chrono-seconds');
-				localStorage.removeItem('chrono-startTime');
+				if (lapTimes.length > 0) {
+					const lastLapTime = lapTimes.pop();
+					chronoSeconds = lastLapTime;
+					const chronoDegrees = ((chronoSeconds % 60) / 60) * 360;
+					chronoHand.style.transform = `translate(-50%, -100%) rotate(${chronoDegrees}deg)`;
+					chronoNumber.textContent = formatSeconds(chronoSeconds);
+
+					const lapHands = document.querySelectorAll('.lap-hand');
+					if (lapHands.length > 0) {
+						lapHands[lapHands.length - 1].remove();
+					}
+					localStorage.setItem('chrono-seconds', chronoSeconds);
+				} else {
+					chronoSeconds = 0;
+					lapTimes = [];
+					chronoNumber.textContent = '';
+					chronoHand.style.transform = 'translate(-50%, -100%) rotate(0deg)';
+					const lapHands = document.querySelectorAll('.lap-hand');
+					lapHands.forEach(hand => hand.remove());
+					localStorage.removeItem('chrono-running');
+					localStorage.removeItem('chrono-seconds');
+					localStorage.removeItem('chrono-startTime');
+				}
 			}
 			updateChronoLabels();
 		}
