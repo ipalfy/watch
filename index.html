@@ -75,6 +75,24 @@
 		</div>
 
 	</div>
+	<div class="debug-controls" style="display: none;">
+		<div>
+			<label for="latitude-slider">Latitude</label>
+			<input type="range" id="latitude-slider" min="-90" max="90" value="48.1374" step="0.0001">
+			<span id="latitude-value">48.1374</span>
+		</div>
+		<div>
+			<label for="longitude-slider">Longitude</label>
+			<input type="range" id="longitude-slider" min="-180" max="180" value="11.5755" step="0.0001">
+			<span id="longitude-value">11.5755</span>
+		</div>
+		<div>
+			<label for="date-slider">Date</label>
+			<input type="range" id="date-slider" min="0" max="364" value="0">
+			<span id="date-value"></span>
+		</div>
+		<button id="reset-debug-button">Reset to Current Position and Date/Time</button>
+	</div>
 	<script>
 		// --- DOM Elements ---
 		const body = document.body;
@@ -94,6 +112,15 @@
 		const timeModeButton = document.getElementById('time-mode-button');
 		const sunMoonToggleButton = document.getElementById('sun-moon-toggle');
 
+		const latitudeSlider = document.getElementById('latitude-slider');
+		const longitudeSlider = document.getElementById('longitude-slider');
+		const dateSlider = document.getElementById('date-slider');
+		const latitudeValue = document.getElementById('latitude-value');
+		const longitudeValue = document.getElementById('longitude-value');
+		const dateValue = document.getElementById('date-value');
+		const resetDebugButton = document.getElementById('reset-debug-button');
+
+
 		// --- State ---
 		let chronoInterval = null;
 		let chronoSeconds = 0;
@@ -104,6 +131,25 @@
 		let sunMoonData = null;
 		let symbolsVisible = false;
 		let timeModeBeforeSunMoon = null;
+		let debugDateOffset = 0; // in days
+
+		function getCurrentDate() {
+			const now = new Date();
+			now.setDate(now.getDate() + debugDateOffset);
+			return now;
+		}
+
+		function resetToNow() {
+			debugDateOffset = 0;
+			const today = new Date();
+			const startOfYear = new Date(today.getFullYear(), 0, 1);
+			const dayOfYear = Math.floor((today - startOfYear) / (1000 * 60 * 60 * 24));
+			dateSlider.value = dayOfYear;
+			dateValue.textContent = today.toLocaleDateString();
+			getLocation();
+			setDate();
+		}
+
 
 		// --- Create Markers ---
 		function createMarkers() {
@@ -221,7 +267,7 @@
 
 		// --- Update Clock and Date ---
 		function setDate() {
-			const now = new Date();
+			const now = getCurrentDate();
 
 			const seconds = now.getSeconds();
 			const secondsDegrees = (seconds / 60) * 360;
@@ -401,7 +447,7 @@
 			container.appendChild(solarNoonSymbol);
 
 			// Moon Phase
-			const moonIllumination = SunCalc.getMoonIllumination(new Date());
+			const moonIllumination = SunCalc.getMoonIllumination(getCurrentDate());
 			const moonPhase = moonIllumination.phase;
 			const moonPhaseSymbol = document.createElement('div');
 			moonPhaseSymbol.className = 'sun-moon-symbol';
@@ -421,7 +467,7 @@
 		}
 
 		function fetchSunData(lat, lng) {
-			sunMoonData = SunCalc.getTimes(new Date(), lat, lng);
+			sunMoonData = SunCalc.getTimes(getCurrentDate(), lat, lng);
 			if (symbolsVisible) {
 				createSunMoonSymbols(sunMoonData);
 				updateWatchFaceGradient();
@@ -437,6 +483,10 @@
 			if (navigator.geolocation) {
 				navigator.geolocation.getCurrentPosition(
 					(position) => {
+						latitudeSlider.value = position.coords.latitude;
+						longitudeSlider.value = position.coords.longitude;
+						latitudeValue.textContent = position.coords.latitude.toFixed(4);
+						longitudeValue.textContent = position.coords.longitude.toFixed(4);
 						fetchSunData(position.coords.latitude, position.coords.longitude);
 					},
 					(error) => {
@@ -459,8 +509,10 @@
 
 		function toggleSunMoonSymbols() {
 			symbolsVisible = !symbolsVisible;
+			const debugControls = document.querySelector('.debug-controls');
 
 			if (symbolsVisible) { // Activating
+				debugControls.style.display = 'block';
 				if (!is24HourMode) {
 					timeModeBeforeSunMoon = '12h';
 					toggleTimeMode();
@@ -476,6 +528,7 @@
 					document.querySelector('.watch-face').classList.add('sun-moon-active');
 				}
 			} else { // Deactivating
+				debugControls.style.display = 'none';
 				document.getElementById('sun-moon-symbols').style.display = 'none';
 				document.querySelector('.watch-face').classList.remove('sun-moon-active');
 				if (timeModeBeforeSunMoon === '12h') {
@@ -576,6 +629,25 @@
 		modeToggleButton.addEventListener('click', toggleMode);
 		timeModeButton.addEventListener('click', toggleTimeMode);
 		sunMoonToggleButton.addEventListener('click', toggleSunMoonSymbols);
+		resetDebugButton.addEventListener('click', resetToNow);
+
+		latitudeSlider.addEventListener('input', (e) => {
+			latitudeValue.textContent = e.target.value;
+			fetchSunData(parseFloat(e.target.value), parseFloat(longitudeSlider.value));
+		});
+
+		longitudeSlider.addEventListener('input', (e) => {
+			longitudeValue.textContent = e.target.value;
+			fetchSunData(parseFloat(latitudeSlider.value), parseFloat(e.target.value));
+		});
+
+		dateSlider.addEventListener('input', (e) => {
+			debugDateOffset = parseInt(e.target.value);
+			const newDate = getCurrentDate();
+			dateValue.textContent = newDate.toLocaleDateString();
+			setDate();
+			fetchSunData(parseFloat(latitudeSlider.value), parseFloat(longitudeSlider.value));
+		});
 
 		// --- Initialization ---
 		document.getElementById('label-start').classList.add('active');
@@ -588,6 +660,12 @@
 		setInterval(setDate, 1000);
 		loadChronoState();
 		getLocation();
+
+		const today = new Date();
+		const startOfYear = new Date(today.getFullYear(), 0, 1);
+		const dayOfYear = Math.floor((today - startOfYear) / (1000 * 60 * 60 * 24));
+		dateSlider.value = dayOfYear;
+		dateValue.textContent = today.toLocaleDateString();
 
 	</script>
 </body>

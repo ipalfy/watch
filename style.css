@@ -441,3 +441,29 @@ body {
 .dark-mode .chrono-dial .marker-line.major {
 	background-color: var(--marker-major-dark);
 }
+
+.debug-controls {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.1);
+    padding: 10px;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 100;
+}
+.dark-mode .debug-controls {
+    background: rgba(255,255,255,0.1);
+}
+.debug-controls div {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-color-light);
+}
+.dark-mode .debug-controls div {
+    color: var(--text-color-dark);
+}
