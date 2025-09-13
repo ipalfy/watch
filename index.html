@@ -76,21 +76,21 @@
 
 	</div>
 	<div class="debug-controls" style="display: none;">
-		<div>
+		<div class="debug-row">
 			<label for="latitude-slider">Latitude</label>
-			<input type="range" id="latitude-slider" min="-90" max="90" value="48.1374" step="0.0001">
-			<span id="latitude-value">48.1374</span>
+			<span id="latitude-value" class="debug-value">48.1374</span>
 		</div>
-		<div>
+		<input type="range" id="latitude-slider" min="-90" max="90" value="48.1374" step="0.1">
+		<div class="debug-row">
 			<label for="longitude-slider">Longitude</label>
-			<input type="range" id="longitude-slider" min="-180" max="180" value="11.5755" step="0.0001">
-			<span id="longitude-value">11.5755</span>
+			<span id="longitude-value" class="debug-value">11.5755</span>
 		</div>
-		<div>
+		<input type="range" id="longitude-slider" min="-180" max="180" value="11.5755" step="0.1">
+		<div class="debug-row">
 			<label for="date-slider">Date</label>
-			<input type="range" id="date-slider" min="0" max="364" value="0">
-			<span id="date-value"></span>
+			<span id="date-value" class="debug-value"></span>
 		</div>
+		<input type="range" id="date-slider" min="0" max="364" value="0">
 		<button id="reset-debug-button">Reset to Current Position and Date/Time</button>
 	</div>
 	<script>
@@ -662,10 +662,35 @@
 		getLocation();
 
 		const today = new Date();
-		const startOfYear = new Date(today.getFullYear(), 0, 1);
-		const dayOfYear = Math.floor((today - startOfYear) / (1000 * 60 * 60 * 24));
-		dateSlider.value = dayOfYear;
+		const sixMonthsAgo = new Date(today);
+		sixMonthsAgo.setMonth(today.getMonth() - 6);
+		const sixMonthsHence = new Date(today);
+		sixMonthsHence.setMonth(today.getMonth() + 6);
+
+		const totalDays = Math.floor((sixMonthsHence - sixMonthsAgo) / (1000 * 60 * 60 * 24));
+		const todayOffset = Math.floor((today - sixMonthsAgo) / (1000 * 60 * 60 * 24));
+
+		dateSlider.min = 0;
+		dateSlider.max = totalDays;
+		dateSlider.value = todayOffset;
 		dateValue.textContent = today.toLocaleDateString();
+
+		dateSlider.addEventListener('input', (e) => {
+			const selectedDayOffset = parseInt(e.target.value);
+			debugDateOffset = selectedDayOffset - todayOffset;
+			const newDate = getCurrentDate();
+			dateValue.textContent = newDate.toLocaleDateString();
+			setDate();
+			fetchSunData(parseFloat(latitudeSlider.value), parseFloat(longitudeSlider.value));
+		});
+
+		function resetToNow() {
+			debugDateOffset = 0;
+			dateSlider.value = todayOffset;
+			dateValue.textContent = today.toLocaleDateString();
+			getLocation();
+			setDate();
+		}
 
 	</script>
 </body>

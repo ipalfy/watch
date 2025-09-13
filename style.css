@@ -448,22 +448,120 @@ body {
     left: 50%;
     transform: translateX(-50%);
     background: rgba(0,0,0,0.1);
-    padding: 10px;
-    border-radius: 5px;
+    padding: 15px;
+    border-radius: 8px;
     display: flex;
     flex-direction: column;
     gap: 10px;
     z-index: 100;
+    width: 400px;
 }
+
 .dark-mode .debug-controls {
     background: rgba(255,255,255,0.1);
 }
-.debug-controls div {
+
+.debug-row {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 10px;
+}
+
+.debug-controls label {
+    font-size: 12px;
+    font-weight: 500;
     color: var(--text-color-light);
 }
-.dark-mode .debug-controls div {
+
+.dark-mode .debug-controls label {
     color: var(--text-color-dark);
+}
+
+.debug-value {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-color-light);
+    text-align: right;
+}
+
+.dark-mode .debug-value {
+    color: var(--text-color-dark);
+}
+
+.debug-controls button {
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    margin-top: 10px;
+}
+
+.dark-mode .debug-controls button {
+    background-color: #333;
+    border-color: #555;
+    color: #fff;
+}
+
+.debug-controls button:hover {
+    background-color: #e0e0e0;
+}
+
+.dark-mode .debug-controls button:hover {
+    background-color: #444;
+}
+
+/* Braun-style Sliders */
+input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 4px;
+    background: #ccc;
+    border-radius: 2px;
+    outline: none;
+    transition: background 0.3s;
+    margin-top: 2px; /* Add some space between the row and the slider */
+}
+
+.dark-mode input[type="range"] {
+    background: #555;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    background: var(--hand-second-color);
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid var(--watch-face-light);
+    box-shadow: 0 0 2px rgba(0,0,0,0.3);
+}
+
+.dark-mode input[type="range"]::-webkit-slider-thumb {
+    border-color: var(--watch-face-dark);
+}
+
+input[type="range"]::-moz-range-track {
+    width: 100%;
+    height: 4px;
+    background: #ccc;
+    border-radius: 2px;
+    outline: none;
+}
+
+.dark-mode input[type="range"]::-moz-range-track {
+    background: #555;
+}
+
+input[type="range"]::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    background: var(--hand-second-color);
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid var(--watch-face-light);
 }
