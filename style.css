@@ -189,7 +189,8 @@ body {
 }
 
 .dark-mode .date-display {
-	color: var(--text-color-dark);
+	color: #aaa;
+	background-color: #444;
 }
 
 .chrono-number {
@@ -454,6 +455,10 @@ body {
 	border-radius: 0.25rem;
 	width: 4rem;
 	text-align: center;
+}
+
+.dark-mode .digital-display {
+	background-color: #A00000;
 }
 
 .chrono-pivot {
