@@ -581,3 +581,50 @@ input[type="range"]::-moz-range-thumb {
     cursor: pointer;
     border: 2px solid var(--watch-face-light);
 }
+.laps-panel {
+    background: rgba(0,0,0,0.1);
+    padding: 15px;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 100;
+    width: 320px;
+}
+
+.dark-mode .laps-panel {
+    background: rgba(255,255,255,0.1);
+}
+
+.laps-panel table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+.laps-panel th, .laps-panel td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+
+.dark-mode .laps-panel th, .dark-mode .laps-panel td {
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.laps-panel th {
+    font-weight: 500;
+    color: var(--text-color-light);
+}
+
+.dark-mode .laps-panel th {
+    color: var(--text-color-dark);
+}
+
+.laps-panel td {
+    color: var(--text-color-light);
+}
+
+.dark-mode .laps-panel td {
+    color: var(--text-color-dark);
+}

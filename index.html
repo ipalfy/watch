@@ -87,6 +87,20 @@
 		<button id="reset-debug-button">Reset to Current Position and Date/Time</button>
 		<div id="location-display"></div>
 	</div>
+	<div id="lap-times-container" class="laps-panel" style="display: none;">
+		<table>
+			<thead>
+				<tr>
+					<th>Lap</th>
+					<th>Time</th>
+					<th>Date/Time</th>
+					<th>Location</th>
+				</tr>
+			</thead>
+			<tbody id="lap-times-body">
+			</tbody>
+		</table>
+	</div>
 	<script>
 		// --- DOM Elements ---
 		const body = document.body;
@@ -111,6 +125,8 @@
 		const resetDebugButton = document.getElementById('reset-debug-button');
 		const locationDisplay = document.getElementById('location-display');
 		const mapContainer = document.getElementById('map');
+		const lapTimesContainer = document.getElementById('lap-times-container');
+		const lapTimesBody = document.getElementById('lap-times-body');
 
 		// --- Map State ---
 		let map = null;
@@ -135,14 +151,18 @@
 					throw new Error('Network response was not ok');
 				}
 				const data = await response.json();
-				if (data && data.display_name) {
+				if (data && data.address) {
+					const location = `${data.address.city || ''}, ${data.address.country || ''}`;
 					locationDisplay.textContent = data.display_name;
+					return location;
 				} else {
 					locationDisplay.textContent = 'Location not found';
+					return 'Unknown Location';
 				}
 			} catch (error) {
 				locationDisplay.textContent = 'Could not resolve location';
 				console.error('Error fetching location:', error);
+				return 'Unknown Location';
 			}
 		}
 
@@ -356,7 +376,7 @@
 		}
 
 		// --- Chronometer Logic ---
-		function handleStartLap() {
+		async function handleStartLap() {
 			if (!isChronoRunning) {
 				isChronoRunning = true;
 				const startTime = Date.now() - (chronoSeconds * 1000);
@@ -369,9 +389,17 @@
 					chronoHand.style.transform = `translate(-50%, -100%) rotate(${chronoDegrees}deg)`;
 					chronoNumber.textContent = formatSeconds(chronoSeconds);
 				}, 50);
+				lapTimesContainer.style.display = 'block';
 			} else {
 				const lapTime = chronoSeconds;
-				lapTimes.push(lapTime);
+				const { lat, lng } = marker.getLatLng();
+				const location = await fetchLocationName(lat, lng);
+				const dateTime = new Date();
+
+				lapTimes.push({ time: lapTime, dateTime, location });
+				localStorage.setItem('lapTimes', JSON.stringify(lapTimes));
+				renderLapTimes();
+
 				const lapHand = document.createElement('div');
 				lapHand.className = 'hand lap-hand';
 				lapHand.style.backgroundColor = 'black';
@@ -394,16 +422,13 @@
 			} else {
 				if (lapTimes.length > 0) {
 					const lastLapTime = lapTimes.pop();
-					chronoSeconds = lastLapTime;
-					const chronoDegrees = ((chronoSeconds % 60) / 60) * 360;
-					chronoHand.style.transform = `translate(-50%, -100%) rotate(${chronoDegrees}deg)`;
-					chronoNumber.textContent = formatSeconds(chronoSeconds);
+					localStorage.setItem('lapTimes', JSON.stringify(lapTimes));
+					renderLapTimes();
 
 					const lapHands = document.querySelectorAll('.lap-hand');
 					if (lapHands.length > 0) {
 						lapHands[lapHands.length - 1].remove();
 					}
-					localStorage.setItem('chrono-seconds', chronoSeconds);
 				} else {
 					chronoSeconds = 0;
 					lapTimes = [];
@@ -413,10 +438,25 @@
 					lapHands.forEach(hand => hand.remove());
 					localStorage.removeItem('chrono-running');
 					localStorage.removeItem('chrono-seconds');
-					localStorage.removeItem('chrono-startTime');
+					localStorage.removeItem('lapTimes');
+					lapTimesContainer.style.display = 'none';
 				}
 			}
 			updateChronoLabels();
+		}
+
+		function renderLapTimes() {
+			lapTimesBody.innerHTML = '';
+			lapTimes.forEach((lap, index) => {
+				const row = document.createElement('tr');
+				row.innerHTML = `
+					<td>${index + 1}</td>
+					<td>${formatSeconds(lap.time)}</td>
+					<td>${new Date(lap.dateTime).toLocaleString()}</td>
+					<td>${lap.location}</td>
+				`;
+				lapTimesBody.appendChild(row);
+			});
 		}
 
 		function updateChronoLabels() {
@@ -687,6 +727,12 @@
 					chronoHand.style.transform = `translate(-50%, -100%) rotate(${chronoDegrees}deg)`;
 					chronoNumber.textContent = formatSeconds(chronoSeconds);
 				}
+			}
+			const savedLapTimes = JSON.parse(localStorage.getItem('lapTimes'));
+			if (savedLapTimes) {
+				lapTimes = savedLapTimes;
+				renderLapTimes();
+				lapTimesContainer.style.display = 'block';
 			}
 			updateChronoLabels();
 		}
