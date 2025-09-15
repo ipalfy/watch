@@ -575,9 +575,13 @@
 
 			if (symbolsVisible) { // Activating
 				debugControls.style.display = 'block';
-                if (!map) {
-				    getLocation();
-                }
+				if (!map) {
+					getLocation();
+				} else {
+					setTimeout(function() {
+						map.invalidateSize();
+					}, 10);
+				}
 				if (!is24HourMode) {
 					timeModeBeforeSunMoon = '12h';
 					toggleTimeMode();
