@@ -7,6 +7,8 @@
 	<title>Braun-Style Analog Watch</title>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/suncalc.min.js"></script>
 	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+	<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 	<link rel="stylesheet" href="style.css">
 </head>
 
@@ -76,21 +78,12 @@
 
 	</div>
 	<div class="debug-controls" style="display: none;">
-		<div class="debug-row">
-			<label for="latitude-slider">Latitude</label>
-			<span id="latitude-value" class="debug-value">48.1374</span>
-		</div>
-		<input type="range" id="latitude-slider" min="-90" max="90" value="48.1374" step="0.1">
-		<div class="debug-row">
-			<label for="longitude-slider">Longitude</label>
-			<span id="longitude-value" class="debug-value">11.5755</span>
-		</div>
-		<input type="range" id="longitude-slider" min="-180" max="180" value="11.5755" step="0.1">
+		<div id="map" style="height: 200px; width: 100%;"></div>
 		<div class="debug-row">
 			<label for="date-slider">Date</label>
 			<span id="date-value" class="debug-value"></span>
 		</div>
-		<input type="range" id="date-slider" min="0" max="364" value="0">
+		<input type="range" id="date-slider" min="0" max="364" value="0" step="1">
 		<button id="reset-debug-button">Reset to Current Position and Date/Time</button>
 		<div id="location-display"></div>
 	</div>
@@ -113,15 +106,16 @@
 		const timeModeButton = document.getElementById('time-mode-button');
 		const sunMoonToggleButton = document.getElementById('sun-moon-toggle');
 
-		const latitudeSlider = document.getElementById('latitude-slider');
-		const longitudeSlider = document.getElementById('longitude-slider');
 		const dateSlider = document.getElementById('date-slider');
-		const latitudeValue = document.getElementById('latitude-value');
-		const longitudeValue = document.getElementById('longitude-value');
 		const dateValue = document.getElementById('date-value');
-		        const resetDebugButton = document.getElementById('reset-debug-button');
+		const resetDebugButton = document.getElementById('reset-debug-button');
 		const locationDisplay = document.getElementById('location-display');
+		const mapContainer = document.getElementById('map');
 
+		// --- Map State ---
+		let map = null;
+		let marker = null;
+		let initialCoords = [48.1374, 11.5755]; // Default to Munich
 
 		// --- Debounce Function ---
 		function debounce(func, delay) {
@@ -154,14 +148,11 @@
 
 		const debouncedFetchLocation = debounce(fetchLocationName, 500); // 500ms delay
 
-
-
 		// --- State ---
 		let chronoInterval = null;
 		let chronoSeconds = 0;
 		let isChronoRunning = false;
 		let lapTimes = [];
-		let lapHandCounter = 0;
 		let is24HourMode = false;
 		let sunMoonData = null;
 		let symbolsVisible = false;
@@ -181,8 +172,48 @@
 			const dayOfYear = Math.floor((today - startOfYear) / (1000 * 60 * 60 * 24));
 			dateSlider.value = dayOfYear;
 			dateValue.textContent = today.toLocaleDateString();
-			getLocation();
+			
+			if (navigator.geolocation) {
+				navigator.geolocation.getCurrentPosition(
+					(position) => {
+						updateMapAndLocation(position.coords.latitude, position.coords.longitude, true);
+					},
+					() => {
+						updateMapAndLocation(initialCoords[0], initialCoords[1], true);
+					}
+				);
+			} else {
+				updateMapAndLocation(initialCoords[0], initialCoords[1], true);
+			}
 			setDate();
+		}
+
+		// --- Map Functions ---
+		function initMap(lat, lng) {
+			if (map) {
+				map.remove();
+			}
+			map = L.map(mapContainer).setView([lat, lng], 2);
+			L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+				attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+			}).addTo(map);
+
+			marker = L.marker([lat, lng]).addTo(map);
+
+			map.on('click', function(e) {
+				updateMapAndLocation(e.latlng.lat, e.latlng.lng, false);
+			});
+		}
+
+		function updateMapAndLocation(lat, lng, resetView) {
+			if (marker) {
+				marker.setLatLng([lat, lng]);
+			}
+			if (map) {
+				map.setView([lat, lng], resetView ? 2 : 5);
+			}
+			fetchSunData(lat, lng);
+			debouncedFetchLocation(lat, lng);
 		}
 
 
@@ -239,9 +270,6 @@
 					markerLine.style.width = '2px';
 					markerLine.style.height = '6px';
 					markerLine.classList.add('major');
-					// } else { // Every second
-					// 	markerLine.style.width = '1px';
-					// 	markerLine.style.height = '4px';
 				}
 
 				markerWrapper.appendChild(markerLine);
@@ -256,10 +284,8 @@
 			const radius = is24HourMode ? 130 : 125; // Reverted 12h radius
 			const fontSize = is24HourMode ? '14px' : '20px';
 
-			// Create a fragment to batch DOM insertions
 			const fragment = document.createDocumentFragment();
 
-			// Animate existing numbers and add new ones
 			for (let i = 1; i <= 24; i++) {
 				let numberEl = numbersContainer.querySelector(`.hour-number-${i}`);
 
@@ -281,7 +307,6 @@
 						fragment.appendChild(numberEl);
 					}
 
-					// Use a timeout to apply transition-triggering styles after element is in DOM
 					setTimeout(() => {
 						numberEl.style.fontSize = fontSize;
 						numberEl.style.transform = `translate(${x}px, ${y}px)`;
@@ -323,7 +348,6 @@
 
 			const day = String(now.getDate()).padStart(2, '0');
 			const dayOfWeek = now.toLocaleDateString(undefined, { weekday: 'long' });
-			const monthName = now.toLocaleDateString(undefined, { month: 'long' });
 			const month = String(now.getMonth() + 1).padStart(2, '0');
 			const year = String(now.getFullYear()).slice(-2);
 
@@ -510,9 +534,9 @@
 		}
 
 		function getFallbackLocation() {
-			// Default to Munich
-			const lat = 48.1374;
-			const lng = 11.5755;
+			const lat = initialCoords[0];
+			const lng = initialCoords[1];
+			initMap(lat, lng);
 			fetchSunData(lat, lng);
 			fetchLocationName(lat, lng);
 		}
@@ -523,10 +547,7 @@
 					(position) => {
 						const lat = position.coords.latitude;
 						const lng = position.coords.longitude;
-						latitudeSlider.value = lat;
-						longitudeSlider.value = lng;
-						latitudeValue.textContent = lat.toFixed(4);
-						longitudeValue.textContent = lng.toFixed(4);
+						initMap(lat, lng);
 						fetchSunData(lat, lng);
 						fetchLocationName(lat, lng);
 					},
@@ -554,6 +575,9 @@
 
 			if (symbolsVisible) { // Activating
 				debugControls.style.display = 'block';
+                if (!map) {
+				    getLocation();
+                }
 				if (!is24HourMode) {
 					timeModeBeforeSunMoon = '12h';
 					toggleTimeMode();
@@ -615,7 +639,6 @@
 			document.getElementById('label-24h').classList.toggle('active', is24HourMode);
 			document.getElementById('label-12h').classList.toggle('active', !is24HourMode);
 
-			// Animate markers
 			markersContainer.style.transition = 'opacity 0.25s ease-out';
 			markersContainer.style.opacity = '0';
 			setTimeout(() => {
@@ -672,28 +695,25 @@
 		sunMoonToggleButton.addEventListener('click', toggleSunMoonSymbols);
 		resetDebugButton.addEventListener('click', resetToNow);
 
-		latitudeSlider.addEventListener('input', (e) => {
-			latitudeValue.textContent = e.target.value;
-			const lat = parseFloat(e.target.value);
-			const lng = parseFloat(longitudeSlider.value);
-			fetchSunData(lat, lng);
-			debouncedFetchLocation(lat, lng);
-		});
+		const today = new Date();
+		const sixMonthsAgo = new Date(today);
+		sixMonthsAgo.setMonth(today.getMonth() - 6);
+		const sixMonthsHence = new Date(today);
+		sixMonthsHence.setMonth(today.getMonth() + 6);
 
-		longitudeSlider.addEventListener('input', (e) => {
-			longitudeValue.textContent = e.target.value;
-			const lat = parseFloat(latitudeSlider.value);
-			const lng = parseFloat(e.target.value);
-			fetchSunData(lat, lng);
-			debouncedFetchLocation(lat, lng);
-		});
+		const totalDays = Math.floor((sixMonthsHence - sixMonthsAgo) / (1000 * 60 * 60 * 24));
+		const todayOffset = Math.floor((today - sixMonthsAgo) / (1000 * 60 * 60 * 24));
 
 		dateSlider.addEventListener('input', (e) => {
-			debugDateOffset = parseInt(e.target.value);
+			const selectedDayOffset = parseInt(e.target.value);
+			debugDateOffset = selectedDayOffset - todayOffset;
 			const newDate = getCurrentDate();
 			dateValue.textContent = newDate.toLocaleDateString();
 			setDate();
-			fetchSunData(parseFloat(latitudeSlider.value), parseFloat(longitudeSlider.value));
+			if(marker) {
+				const { lat, lng } = marker.getLatLng();
+				fetchSunData(lat, lng);
+			}
 		});
 
 		// --- Initialization ---
@@ -708,39 +728,10 @@
 		loadChronoState();
 		getLocation();
 
-		const today = new Date();
-		const sixMonthsAgo = new Date(today);
-		sixMonthsAgo.setMonth(today.getMonth() - 6);
-		const sixMonthsHence = new Date(today);
-		sixMonthsHence.setMonth(today.getMonth() + 6);
-
-		const totalDays = Math.floor((sixMonthsHence - sixMonthsAgo) / (1000 * 60 * 60 * 24));
-		const todayOffset = Math.floor((today - sixMonthsAgo) / (1000 * 60 * 60 * 24));
-
 		dateSlider.min = 0;
 		dateSlider.max = totalDays;
 		dateSlider.value = todayOffset;
 		dateValue.textContent = today.toLocaleDateString();
-
-		dateSlider.addEventListener('input', (e) => {
-			const selectedDayOffset = parseInt(e.target.value);
-			debugDateOffset = selectedDayOffset - todayOffset;
-			const newDate = getCurrentDate();
-			dateValue.textContent = newDate.toLocaleDateString();
-			setDate();
-			fetchSunData(parseFloat(latitudeSlider.value), parseFloat(longitudeSlider.value));
-		});
-
-		function resetToNow() {
-			debugDateOffset = 0;
-			dateSlider.value = todayOffset;
-			dateValue.textContent = today.toLocaleDateString();
-			getLocation();
-			setDate();
-			const lat = parseFloat(latitudeSlider.value);
-			const lng = parseFloat(longitudeSlider.value);
-			fetchLocationName(lat, lng);
-		}
 
 	</script>
 </body>

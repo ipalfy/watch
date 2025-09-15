@@ -495,6 +495,11 @@ body {
     margin-top: 10px;
 }
 
+#reset-debug-button {
+    display: block;
+    margin: 10px auto 0;
+}
+
 .dark-mode .debug-controls button {
     background-color: #333;
     border-color: #555;
