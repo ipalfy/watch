@@ -172,13 +172,16 @@
 				const data = await response.json();
 				if (data && data.address) {
 					const location = `${data.address.city || ''}, ${data.address.country || ''}`;
-					
-					const tzResponse = await fetch(`https://timeapi.io/api/TimeZone/coordinate?latitude=${lat}&longitude=${lng}`);
-					const tzData = await tzResponse.json();
-					remoteTimezoneData = tzData; // Store the timezone data
-					const timeZone = tzData.timeZone;
-					
-					const locationOffsetHours = tzData.currentUtcOffset.seconds / 3600;
+
+					if (!lastFetchedCoords || Math.abs(lat - lastFetchedCoords.lat) > 0.1 || Math.abs(lng - lastFetchedCoords.lng) > 0.1) {
+						const tzResponse = await fetch(`https://timeapi.io/api/TimeZone/coordinate?latitude=${lat}&longitude=${lng}`);
+						const tzData = await tzResponse.json();
+						remoteTimezoneData = tzData;
+						lastFetchedCoords = { lat, lng };
+					}
+
+					const timeZone = remoteTimezoneData.timeZone;
+					const locationOffsetHours = remoteTimezoneData.currentUtcOffset.seconds / 3600;
 					const myOffsetHours = -new Date().getTimezoneOffset() / 60;
 					const diffHours = locationOffsetHours - myOffsetHours;
 
@@ -221,6 +224,7 @@
 		let debugDateOffset = 0; // in days
 		let isLocalTime = true;
 		let remoteTimezoneData = null;
+		let lastFetchedCoords = null;
 
 		function getCurrentDate() {
 			const now = new Date();
