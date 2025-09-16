@@ -77,6 +77,7 @@
 		</div>
 
 	</div>
+	
 	<div class="debug-controls" style="display: none;">
 		<div id="map" style="height: 200px; width: 100%;"></div>
 		<div class="debug-row">
@@ -84,9 +85,16 @@
 			<span id="date-value" class="debug-value"></span>
 		</div>
 		<input type="range" id="date-slider" min="0" max="364" value="0" step="1">
-		<button id="reset-debug-button">Reset to Current Position and Date/Time</button>
+		<div class="debug-buttons">
+			<button id="reset-debug-button">Reset Time/Location</button>
+			<label class="switch">
+				<input type="checkbox" id="debug-location-time-toggle">
+				<span class="slider round"></span>
+			</label>
+		</div>
 		<div id="location-display"></div>
 	</div>
+	
 	<div id="lap-times-container" class="laps-panel" style="display: none;">
 		<table>
 			<thead>
@@ -101,6 +109,7 @@
 			</tbody>
 		</table>
 	</div>
+	
 	<script>
 		// --- DOM Elements ---
 		const body = document.body;
@@ -127,6 +136,16 @@
 		const mapContainer = document.getElementById('map');
 		const lapTimesContainer = document.getElementById('lap-times-container');
 		const lapTimesBody = document.getElementById('lap-times-body');
+		const debugLocationTimeToggle = document.getElementById('debug-location-time-toggle');
+
+		function updateLocationTimeToggleButton() {
+			debugLocationTimeToggle.checked = !isLocalTime;
+		}
+
+		debugLocationTimeToggle.addEventListener('change', () => {
+			isLocalTime = !debugLocationTimeToggle.checked;
+			setDate();
+		});
 
 		// --- Map State ---
 		let map = null;
@@ -153,7 +172,29 @@
 				const data = await response.json();
 				if (data && data.address) {
 					const location = `${data.address.city || ''}, ${data.address.country || ''}`;
-					locationDisplay.textContent = data.display_name;
+					
+					const tzResponse = await fetch(`https://timeapi.io/api/TimeZone/coordinate?latitude=${lat}&longitude=${lng}`);
+					const tzData = await tzResponse.json();
+					remoteTimezoneData = tzData; // Store the timezone data
+					const timeZone = tzData.timeZone;
+					
+					const locationOffsetHours = tzData.currentUtcOffset.seconds / 3600;
+					const myOffsetHours = -new Date().getTimezoneOffset() / 60;
+					const diffHours = locationOffsetHours - myOffsetHours;
+
+					let offsetString = `+${locationOffsetHours}`;
+					if (locationOffsetHours < 0) {
+						offsetString = `${locationOffsetHours}`;
+					}
+
+					let diffString = `${diffHours}h ahead`;
+					if (diffHours < 0) {
+						diffString = `${-diffHours}h behind`;
+					} else if (diffHours === 0) {
+						diffString = 'same as you';
+					}
+
+					locationDisplay.innerHTML = `<b>${timeZone} (UTC${offsetString}, ${diffString})</b><br><br>${data.display_name}`;
 					return location;
 				} else {
 					locationDisplay.textContent = 'Location not found';
@@ -178,10 +219,19 @@
 		let symbolsVisible = false;
 		let timeModeBeforeSunMoon = null;
 		let debugDateOffset = 0; // in days
+		let isLocalTime = true;
+		let remoteTimezoneData = null;
 
 		function getCurrentDate() {
 			const now = new Date();
 			now.setDate(now.getDate() + debugDateOffset);
+
+			if (!isLocalTime && remoteTimezoneData) {
+				const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+				const remoteTime = utc + (remoteTimezoneData.currentUtcOffset.seconds * 1000);
+				return new Date(remoteTime);
+			}
+
 			return now;
 		}
 
@@ -192,6 +242,8 @@
 			const dayOfYear = Math.floor((today - startOfYear) / (1000 * 60 * 60 * 24));
 			dateSlider.value = dayOfYear;
 			dateValue.textContent = today.toLocaleDateString();
+			isLocalTime = true;
+			updateLocationTimeToggleButton();
 			
 			if (navigator.geolocation) {
 				navigator.geolocation.getCurrentPosition(
@@ -366,12 +418,27 @@
 			}
 			hourHand.style.transform = `translate(-50%, -100%) rotate(${hoursDegrees}deg)`;
 
+			const timeOptions = {
+				hour: '2-digit',
+				minute: '2-digit',
+				second: '2-digit'
+			};
+
+			const dateOptions = {
+				weekday: 'long'
+			};
+
+			if (!isLocalTime && remoteTimezoneData) {
+				timeOptions.timeZone = remoteTimezoneData.timeZone;
+				dateOptions.timeZone = remoteTimezoneData.timeZone;
+			}
+
 			const day = String(now.getDate()).padStart(2, '0');
-			const dayOfWeek = now.toLocaleDateString(undefined, { weekday: 'long' });
+			const dayOfWeek = now.toLocaleDateString(undefined, dateOptions);
 			const month = String(now.getMonth() + 1).padStart(2, '0');
 			const year = String(now.getFullYear()).slice(-2);
 
-			digitalDisplay.textContent = now.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+			digitalDisplay.textContent = now.toLocaleTimeString(undefined, timeOptions);
 			dateDisplay.innerHTML = `${dayOfWeek}<br>${day}.${month}.${year}`;
 		}
 
